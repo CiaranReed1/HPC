@@ -9,5 +9,5 @@
 #SBATCH -p test
 
 module load gcc
-
+gcc serial.c -o hello-serial
 ./hello-serial

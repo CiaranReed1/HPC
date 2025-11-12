@@ -9,6 +9,9 @@ int main(void)
   {
     thread = omp_get_thread_num();
     printf("Hello, World! I am thread %d of %d\n", thread, nthread);
+    if (thread == (nthread -1)){
+	printf("I am thread %d, I have the highest index!!\n",thread);
+	}
   }
   return 0;
 }

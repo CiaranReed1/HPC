@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # 1 node
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=2
+#SBATCH --nodes=2
+#SBATCH --ntasks-per-node=1
 #SBATCH --job-name="hello-mpi"
 #SBATCH -o hello-mpi.%J.out
 #SBATCH -e hello-mpi.%J.err
@@ -11,5 +11,5 @@
 
 module load gcc
 module load openmpi
-
-mpirun -np 2 ./hello-mpi
+mpicc -o hello-mpi mpi.c
+mpirun ./hello-mpi

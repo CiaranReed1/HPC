@@ -46,7 +46,7 @@ double time_ijk(int N){
 	double C[N][N][N];
 	
 	clock_t t0 = clock();
-	#pragma omp parallel for 
+	#pragma omp parallel for collapse(3)
 	for(i=0; i<N; i++){
 		for (j = 0;j<N;j++){
 			for(k = 0;k<N;k++){
@@ -66,7 +66,7 @@ double time_ikj(int N){
 	double C[N][N][N];
     
 	clock_t t0 = clock();
-	#pragma omp parallel for
+	#pragma omp parallel for collapse(3)
 	for(i=0; i<N; i++){
 		for(k=0; k<N; k++){
 			for(j=0; j<N; j++){
@@ -86,7 +86,7 @@ double time_jik(int N){
 	double C[N][N][N];
     
 	clock_t t0 = clock();
-	#pragma omp parallel for
+	#pragma omp parallel for collapse(3)
 	for(j=0; j<N; j++){
 		for(i=0; i<N; i++){
 			for(k=0; k<N; k++){
@@ -106,7 +106,7 @@ double time_jki(int N){
 	double C[N][N][N];
     
 	clock_t t0 = clock();
-	#pragma omp parallel for
+	#pragma omp parallel for collapse(3)
 	for(j=0; j<N; j++){
 		for(k=0; k<N; k++){
 			for(i=0; i<N; i++){
@@ -126,7 +126,7 @@ double time_kij(int N){
 	double C[N][N][N];
     
 	clock_t t0 = clock();
-	#pragma omp parallel for
+	#pragma omp parallel for collapse(3)
 	for(k=0; k<N; k++){
 		for(i=0; i<N; i++){
 			for(j=0; j<N; j++){
@@ -146,7 +146,7 @@ double time_kji(int N){
 	double C[N][N][N];
     
 	clock_t t0 = clock();
-	#pragma omp parallel for
+	#pragma omp parallel for collapse(3)
 	for(k=0; k<N; k++){
 		for(j=0; j<N; j++){
 			for(i=0; i<N; i++){

@@ -38,6 +38,26 @@ double time_ji(int N){
 	return t1;
 }
 
+double time_ijk(int N){
+	int i,j;
+	
+	double A[N][N][N];
+	double B[N][N][N];
+	double C[N][N][N];
+	
+	clock_t t0 = clock()
+	for(i=0, i<N,i++){
+		for (j = 0;j<N;j++){
+			for(k = 0;k<N;k++){
+				C[i][j][k] = A[i][j][k] + B[i][j][k]
+				}
+		}
+	}
+	double t1 = ((double)clock() - t0)/CLOCKS_PER_SEC;
+	return t1;
+}
+
+
 int main(int argc, char **argv){
 
 	int N = atoi(argv[1]);
@@ -49,6 +69,11 @@ int main(int argc, char **argv){
 	/*
 		Your 3D code here
 	*/
+	t=0.0;
+	for (int m=0;m<M;m++){
+		t += time_ijk(M);
+	}
+	printf("\tij: %2.16f s\n",t/M);
 	
 	printf("2D version:\n");
 	

@@ -202,42 +202,22 @@ int main(int argc, char **argv){
 	/*
 		Your 3D code here
 	*/
-	t=0.0;
-	for (int m=0;m<M;m++){
-		t += time_ijk(N);
-	}
-	printf("\tijk: %2.16f s\n", t / M);
-
-	t = 0.0;
-	for (int m = 0; m < M; m++){
-		t += time_ikj(N);
-	}
-	printf("\tikj: %2.16f s\n", t / M);
-
-	t = 0.0;
-	for (int m = 0; m < M; m++){
-		t += time_jik(N);
-	}
-	printf("\tjik: %2.16f s\n", t / M);
-
-	t = 0.0;
-	for (int m = 0; m < M; m++){
-		t += time_jki(N);
-	}
-	printf("\tjki: %2.16f s\n", t / M);
-
-	t = 0.0;
-	for (int m = 0; m < M; m++){
-		t += time_kij(N);
-	}
-	printf("\tkij: %2.16f s\n", t / M);
-
-	t = 0.0;
-	for (int m = 0; m < M; m++){
-		t += time_kji(N);
-	}
-	printf("\tkji: %2.16f s\n", t / M);
-	
-	/* Run and print sorted 3D permutation timings */
 	benchmark_3d_permutations(N, M);
+	
+	printf("2D version:\n");
+	
 	t=0.0;
+	for (int m=0; m < M; m++){
+		t += time_ij(N);
+	}
+	printf("\tij: %2.16f s\n",t/M);
+	
+	t=0.0;
+	for (int m=0; m < M; m++){
+		t += time_ij(N);
+	}
+	printf("\tji: %2.16f s\n",t/M);
+
+	
+	return 0;
+}

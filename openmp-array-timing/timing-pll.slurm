@@ -14,4 +14,5 @@ module load gcc
 # unnecessary, since we've specified --cores=2 above
 export OMP_NUM_THREADS=8
 gcc -fopenmp -o timing-pll timing-pll.c
+ulimit -s unlimited 
 ./timing-pll 64 50

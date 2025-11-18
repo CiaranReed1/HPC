@@ -1,0 +1,44 @@
+# Compiled object files
+*.o
+*.obj
+
+# Compiled dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled static libraries
+*.a
+*.lib
+
+# Executables
+a.out
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Build directories
+/build/
+/bin/
+/lib/
+/dist/
+/target/
+
+# Debug files
+*.dSYM/
+*.stackdump
+
+# GCC/Clang debug & profiling
+*.gcda
+*.gcno
+*.gcov
+
+# Logs
+*.log
+
+# CMake build files
+CMakeFiles/
+CM

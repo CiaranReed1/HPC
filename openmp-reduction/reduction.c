@@ -66,7 +66,6 @@ int main(int argc, char **argv)
   double *b = malloc(N * sizeof(*b));
   double adotb;
   init(a, b, N);
-  omp_set_num_threads(8);
   double start = omp_get_wtime();
   adotb = dot_reduction(a, b, N);
   #pragma omp parallel

@@ -2,14 +2,17 @@
 #include <omp.h>
 int main(){
     const int N = 40000;
-    int partialsums[4] = {0,0,0,0};
-    #pragma omp parallel for num_threads(4) default(none) shared(partialsums,N)
+    int sum =0;
+    int _sum;
+    #pragma omp parallel num_threads(1) default(none) shared(N,sum) private(_sum)
+    _sum = 0;
+    #pragma omp for
     for (int n=1; n<N+1; n++){
-        partialsums[omp_get_thread_num()]+=n;
+        _sum+=n;
     }
-    int sum = 0;
-    for (int n=0; n<4; n++){
-        sum += partialsums[n];
+    #pragma omp critical 
+    {
+        sum += _sum;
     }
     printf("Result is %d. It should be %d.\n",
         sum, N*(N+1)/2);

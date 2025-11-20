@@ -68,10 +68,12 @@ int main(int argc, char **argv)
   init(a, b, N);
   double start = omp_get_wtime();
   adotb = dot_reduction(a, b, N);
+  double end = omp_get_wtime();
+  
   #pragma omp parallel
 {
     #pragma omp single
-    printf("%d\t%e\t%lu\t%.4g\n", omp_get_num_threads(), omp_get_wtime()-start, N, adotb);
+    printf("%d\t%e\t%lu\t%.4g\n", omp_get_num_threads(), end-start, N, adotb);
 }
   
   free(a);

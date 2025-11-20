@@ -29,6 +29,26 @@ double dot_manual(double *a, double *b, size_t N){
 
 double dot_critical(double *a, double *bm size_t N){
 	double dotabparallel = 0;
+	#pragma omp parallel for
+	for (size_t i = 0; i < N; i++) {
+		#pragma omp critical
+		{
+			dotabparallel += a[i] * b[i];
+		}
+	}
+  	return dotabparallel;
+}
+
+double dot_atomic(double *a, double *b, size_t N){
+	double dotabparallel[N];
+	double dottotal = 0;
+	#pragma omp parallel for
+	for (size_t i = 0; i < N; i++) {
+		dotabparallel[i] = a[i] * b[i];
+		#pragma omp atomic
+		dottotal += dotabparallel[i];
+	}
+  	return dottotal;
 }
 
 int main(int argc, char **argv)

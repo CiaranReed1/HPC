@@ -50,6 +50,14 @@ double dot_atomic(double *a, double *b, size_t N){
 	}
   	return dottotal;
 }
+double dot_reduction(double *a, double *b, size_t N){
+	double dotabparallel = 0;
+	#pragma omp parallel for reduction(+:dotabparallel)
+	for (size_t i = 0; i < N; i++) {
+		dotabparallel += a[i] * b[i];
+	}
+  	return dotabparallel;
+}
 
 int main(int argc, char **argv)
 {

@@ -3,7 +3,7 @@
 int main(){
     const int N = 40000;
     int partialsums[4] = {0,0,0,0};
-    #pragma omp parallel for
+    #pragma omp parallel for num_threads(4) default(none) shared(partialsums,N)
     for (int n=1; n<N+1; n++){
         partialsums[omp_get_thread_num()]+=n;
     }

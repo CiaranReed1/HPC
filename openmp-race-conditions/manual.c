@@ -16,5 +16,6 @@ int main(){
     }
     printf("Result is %d. It should be %d.\n",
         sum, N*(N+1)/2);
+    printf("i have realised that this answer is actually doing the next exercise, nevermind...\n");
     return 0;
 }

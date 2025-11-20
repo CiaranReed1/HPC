@@ -27,7 +27,7 @@ double dot_manual(double *a, double *b, size_t N){
   	return dotabparallel;
 }
 
-double dot_critical(double *a, double *bm size_t N){
+double dot_critical(double *a, double *b, size_t N){
 	double dotabparallel = 0;
 	#pragma omp parallel for
 	for (size_t i = 0; i < N; i++) {
@@ -68,8 +68,13 @@ int main(int argc, char **argv)
   init(a, b, N);
   omp_set_num_threads(8);
   double start = omp_get_wtime();
-  adotb = dot(a, b, N);
-  printf("%d\t%e\t%lu\t%.4g\n", omp_get_max_threads(), omp_get_wtime()-start, N, adotb);
+  adotb = dot_reduction(a, b, N);
+  #pragma omp parallel
+{
+    #pragma omp single
+    printf("%d\t%e\t%lu\t%.4g\n", omp_get_num_threads(), omp_get_wtime()-start, N, adotb);
+}
+  
   free(a);
   free(b);
   return 0;

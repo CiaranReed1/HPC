@@ -26,7 +26,8 @@ static void ping_pong(void *buffer, int count, MPI_Datatype dtype, MPI_Comm comm
 int main(int argc, char **argv){
 	MPI_Init(&argc, &argv);
 
-	int nbytes, rank;
+	int nbytes, rank; 
+	int iterations = 10000;
 	double start,end;
 	char *buffer;
 	MPI_Comm comm;
@@ -38,12 +39,13 @@ int main(int argc, char **argv){
 	buffer = calloc(nbytes, sizeof(*buffer));
 
 	start = MPI_Wtime();
-	ping_pong(buffer, nbytes, MPI_CHAR, comm,rank);
+	for (int i = 0;i < iterations;i++){
+		ping_pong(buffer, nbytes, MPI_CHAR, comm,rank);
+	}
 	end = MPI_Wtime();
-	printf("Time for ping pong of %d bytes on rank %d: %f seconds\n", nbytes, rank, end - start);
+	printf("Time for %d iterations of ping pong of %d bytes on rank %d: %f seconds\n", iterations, nbytes, rank, end - start);
 	free(buffer);
 
 	MPI_Finalize();
-	printf("Ping pong completed\n");
 	return 0;
 }

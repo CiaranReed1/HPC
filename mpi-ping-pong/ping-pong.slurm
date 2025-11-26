@@ -14,5 +14,5 @@ module load gcc
 module load openmpi
 
 
-mpicc -O2 hamil-ping-pong.c -o mpi-ping-pong
+mpicc -O2 hamil-ping-pong.c -o mpi-ping-pong -lm
 mpirun -n 2 ./mpi-ping-pong > two-node-pp.dat

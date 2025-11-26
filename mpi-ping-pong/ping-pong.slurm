@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # 1 node
-#SBATCH --nodes=1
-#SBATCH --cores=2
+#SBATCH --nodes=2
+#SBATCH --cores=1
 #SBATCH --job-name="mpi-ping-pong"
 #SBATCH -o mpi-ping-pong.%J.out
 #SBATCH -e mpi-ping-pong.%J.err
@@ -14,4 +14,4 @@ module load openmpi
 
 
 mpicc -O2 hamil-ping-pong.c -o mpi-ping-pong
-mpirun -n 2 ./mpi-ping-pong > mpi-ping-pong.dat
+mpirun -n 2 ./mpi-ping-pong > two-node-pp.dat

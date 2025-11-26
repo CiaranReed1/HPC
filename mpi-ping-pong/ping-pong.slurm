@@ -6,11 +6,12 @@
 #SBATCH --job-name="mpi-ping-pong"
 #SBATCH -o mpi-ping-pong.%J.out
 #SBATCH -e mpi-ping-pong.%J.err
-#SBATCH -t 00:01:00
+#SBATCH -t 00:10:00
 #SBATCH -p shared
 
 module load gcc
-module load mpi
+module load openmpi
+
 
 mpicc -O2 hamil-ping-pong.c -o mpi-ping-pong
 mpirun -n 2 ./mpi-ping-pong > mpi-ping-pong.dat

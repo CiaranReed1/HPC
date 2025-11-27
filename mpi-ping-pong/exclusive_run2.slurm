@@ -7,7 +7,7 @@
 #SBATCH --job-name="mpi-ping-pong-exclusive-2nodes"
 #SBATCH -o /dev/null
 #SBATCH -e /dev/null
-#SBATCH -t 01:00:00
+#SBATCH -t 24:00:00
 #SBATCH -p multi
 
 module load gcc

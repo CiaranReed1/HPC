@@ -2,14 +2,13 @@
 
 # 1 node
 #SBATCH --nodes=2
-#SBATCH --cores=128
 #SBATCH --ntasks-per-node=128
 #SBATCH --exclusive
 #SBATCH --job-name="mpi-ping-pong-exclusive-2nodes"
 #SBATCH -o /dev/null
 #SBATCH -e /dev/null
-#SBATCH -t 00:20:00
-#SBATCH -p shared
+#SBATCH -t 01:00:00
+#SBATCH -p multi
 
 module load gcc
 module load openmpi

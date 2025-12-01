@@ -1,0 +1,12 @@
+With 64 ranks, Average blocking gather over 100 messages with 256000 entries takes 0.02 s
+With 64 ranks, Average non-blocking gather over 100 messages with 256000 entries takes 0.0208 s
+With 64 ranks, Average blocking gather over 100 messages with 512000 entries takes 0.0498 s
+With 64 ranks, Average non-blocking gather over 100 messages with 512000 entries takes 0.0511 s
+With 64 ranks, Average blocking gather over 100 messages with 1024000 entries takes 0.14 s
+With 64 ranks, Average non-blocking gather over 100 messages with 1024000 entries takes 0.117 s
+With 64 ranks, Average blocking gather over 100 messages with 2048000 entries takes 0.323 s
+With 64 ranks, Average non-blocking gather over 100 messages with 2048000 entries takes 0.282 s
+With 64 ranks, Average blocking gather over 100 messages with 4096000 entries takes 0.65 s
+With 64 ranks, Average non-blocking gather over 100 messages with 4096000 entries takes 0.601 s
+With 64 ranks, Average blocking gather over 100 messages with 8192000 entries takes 1.3 s
+With 64 ranks, Average non-blocking gather over 100 messages with 8192000 entries takes 1.21 s

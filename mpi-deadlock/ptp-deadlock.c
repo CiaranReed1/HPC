@@ -22,8 +22,10 @@ int main(int argc, char **argv)
 	for (int i = 0; i < nentries; i++) {
 		sendbuf[i] = rank;
 	}
-	printf("Sending %d entries per rank\n", nentries);
+
+
 	if (rank == 0) {
+		printf("Sending %d entries per rank\n", nentries);
 		MPI_Send(sendbuf, nentries, MPI_INT, 1, 0, MPI_COMM_WORLD);
 		MPI_Recv(recvbuf, nentries, MPI_INT, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 	} else if (rank == 1) {

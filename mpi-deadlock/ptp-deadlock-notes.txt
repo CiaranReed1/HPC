@@ -1,0 +1,5 @@
+The ptp-deadlock started deadlocking at 1024 entries on my machine. 
+This is because at 512 Integers (512 * 4 ~ 2048 bytes) is below the "eager limit" for MPI. So MPI_Send treats it as MPI_Bsend. 
+Then the sends get sent to a buffer and both ranks can move on to the receive and receive each others send -> no deadlock.
+But at 1024 integers (1024 * 4 ~ 4096 bytes) is above the "eager limit". Thus both ranks use SSend.
+This causes deadlock as both ranks are awaiting each others Recv but will never get it. 

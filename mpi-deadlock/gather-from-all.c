@@ -84,7 +84,7 @@ int main(int argc, char **argv){
 	blocking_time += (end - start);
 
 	if (rank == 0) {
-		printf("Average blocking gather over %d messages with %d entries takes %.3g s\n", nMessages, nEntries, blocking_time/(nMessages));
+		printf("With %d ranks, Average blocking gather over %d messages with %d entries takes %.3g s\n", size, nMessages, nEntries, blocking_time/(nMessages));
 		}
 	
 	
@@ -96,7 +96,7 @@ int main(int argc, char **argv){
 	nonblocking_time += (end - start);
 	
 	if (rank == 0) {
-		printf("Average non-blocking gather over %d messages with %d entries takes %.3g s\n", nMessages, nEntries, nonblocking_time/(nMessages));
+		printf("With %d ranks, Average non-blocking gather over %d messages with %d entries takes %.3g s\n", size, nMessages, nEntries, nonblocking_time/(nMessages));
 		}
 	free(blocking);
 	free(nonblocking);

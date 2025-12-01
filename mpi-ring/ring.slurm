@@ -16,6 +16,6 @@ module load openmpi
 echo "iterations,size,mean_time,score" > ring.dat
 mpicc -O2 ring.c -o ring
 for (( n = 1 ; n <= 64 ; n+=1 )); do
-mpirun -n $n ./ring 1000 >> ring.dat
+mpirun -n $n ./ring 10000 >> ring.dat
 done 
 rm ring

@@ -17,7 +17,7 @@ int main(int argc, char **argv){
 
 	int nIterations = argc > 1 ? atoi(argv[1]) : 1000;
 
-	int local_value;
+	int local_value,received_local;
 	int summed_value;	
 	int desired = (size * (size - 1)) / 2;
 
@@ -26,14 +26,16 @@ int main(int argc, char **argv){
 	for (int iter = 0; iter < nIterations; iter++){
 		summed_value = 0;
 		local_value = rank;
+		received_local = -1;
 		start = MPI_Wtime();
 		summed_value = local_value;
 		for(int i=0; i <size -1;i++){
 			MPI_Request request;
 			MPI_Isend(&local_value,1,MPI_INT,right,0,comm,&request);
-			MPI_Recv(&local_value,1,MPI_INT,left,0,comm,MPI_STATUS_IGNORE);
-			summed_value+=local_value;
+			MPI_Recv(&received_local,1,MPI_INT,left,0,comm,MPI_STATUS_IGNORE);
+			summed_value+=received_local;
 			MPI_Wait(&request,MPI_STATUS_IGNORE);
+			local_value = received_local;
 		}
 		end = MPI_Wtime();
 		mean_time += (end - start);

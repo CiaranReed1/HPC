@@ -14,7 +14,10 @@ module load openmpi
 
 
 mpicc -O2 gather-from-all.c -o gather-from-all 
-mpirun -n 64 ./gather-from-all 2000 256000 > gather-all.dat
-mpirun -n 64 ./gather-from-all 2000 512000 > gather-all.dat
-mpirun -n 64 ./gather-from-all 2000 1024000 > gather-all.dat
+mpirun -n 64 ./gather-from-all 100 256000 >> gather-all.dat
+mpirun -n 64 ./gather-from-all 100 512000 >> gather-all.dat
+mpirun -n 64 ./gather-from-all 100 1024000 >> gather-all.dat
+mpirun -n 64 ./gather-from-all 100 2048000 >> gather-all.dat
+mpirun -n 64 ./gather-from-all 100 4096000 >> gather-all.dat
+mpirun -n 64 ./gather-from-all 100 8192000 >> gather-all.dat
 rm gather-from-all

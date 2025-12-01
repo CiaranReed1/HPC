@@ -1,5 +1,6 @@
 #include <mpi.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 int main(int argc, char **argv){
 	MPI_Init(&argc, &argv);
@@ -14,25 +15,36 @@ int main(int argc, char **argv){
 	left = (rank - 1 + size) % size;
 	right = (rank + 1) % size;
 
-	int local_value = rank;
-	int summed_value = 0;	// initialized sum: 0
+	int nIterations = argc > 1 ? atoi(argv[1]) : 1000;
 
-	printf("[%d] Before reduction: local value is %d; summed value is %d\n",
-	      rank, local_value, summed_value);
-	double start = MPI_Wtime();
-	summed_value = local_value;
-    for(int i=0; i <size -1;i++){
-		MPI_Request request;
-		MPI_Isend(&local_value,1,MPI_INT,right,0,comm,&request);
-		MPI_Recv(&local_value,1,MPI_INT,left,0,comm,MPI_STATUS_IGNORE);
-		summed_value+=local_value;
-		MPI_Wait(&request,MPI_STATUS_IGNORE);
-	}
-	double end = MPI_Wtime();
-	printf("[%d] After reduction: local value is %d; summed value is %d (should be %d)\n",
-	      rank, local_value, summed_value, size*(size-1)/2);
+	int local_value;
+	int summed_value;	
+	int desired = (size * (size - 1)) / 2;
+
+	double start, end, mean_time = 0.0,score = 0.0;
+
+	for (int iter = 0; iter < nIterations; iter++){
+		summed_value = 0;
+		local_value = rank;
+		start = MPI_Wtime();
+		summed_value = local_value;
+		for(int i=0; i <size -1;i++){
+			MPI_Request request;
+			MPI_Isend(&local_value,1,MPI_INT,right,0,comm,&request);
+			MPI_Recv(&local_value,1,MPI_INT,left,0,comm,MPI_STATUS_IGNORE);
+			summed_value+=local_value;
+			MPI_Wait(&request,MPI_STATUS_IGNORE);
+		}
+		end = MPI_Wtime();
+		mean_time += (end - start);
+		if (summed_value == desired){
+			score += 1.0;
+		}
+	};
+	score /= nIterations;
+	mean_time /= nIterations;
 	if (rank == 0){
-		printf("\tReduction on %d processes took %e seconds.\n", size, end-start);
+		printf("%d,%d,%e,%f \n", nIterations,size, mean_time,score);
 	}
 	MPI_Finalize();
 	return 0;

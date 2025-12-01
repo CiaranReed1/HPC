@@ -1,0 +1,8 @@
+Using gather from all, i notice the blocking gather is significantly, and consistently slower than the non blocking gather. 
+When increasing the number of messages i also notice that the blocking time and the non blocking time both increase. I will run and calculate an average to work out what is happening
+
+Running on hamilton with 64 cores over a range of message sizes it is clear the non blocking is faster, especially for larger message sizes.
+For smaller messages it is slower to use non blocking, likely due to the overhead of the non blocking. 
+If combined with adding computing whilst waiting on the receives then it will be obviosuly much better!!!
+ 
+

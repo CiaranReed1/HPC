@@ -5,3 +5,5 @@ But at 1024 integers (1024 * 4 ~ 4096 bytes) is above the "eager limit". Thus bo
 This causes deadlock as both ranks are awaiting each others Recv but will never get it. 
 
 This is verified when changing deadlock.c to send using SSend. Then it doesnt work for any nentires, including 1.
+
+First attempt at Bsend resulted in success up to 1024 entires when i got an error. This was because i wasnt allocating space in the buffer for the MPI overhead. Once i fixed this the program worked perfectly without deadlock.  

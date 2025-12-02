@@ -37,8 +37,8 @@ int main(int argc, char *argv[]) {
   double time = ((double)end - start) / CLOCKS_PER_SEC;
 
   double error = M_PI - my_pi;
-  printf("The value of Pi is %.20f, the error is  %.20f\n", my_pi, error);
-  printf("The calculation took %g s\n", time);
+  printf("%d, %.20f,%.20f,%g\n",N, my_pi, error,time);
+ 
 
   return 0;
 }

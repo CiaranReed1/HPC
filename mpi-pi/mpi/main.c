@@ -43,17 +43,36 @@ int main(int argc, char *argv[]) {
 
   for(int k = 0; k < K; k++) {
       start = MPI_Wtime();
-      double pi_est = calculate_pi(N, k+1*(rank+1)); // varying seed
-      end = MPI_Wtime();
-      pi_est_sum += pi_est;
-      runtime_sum += (end - start);
-      double err = pi_est - M_PI;
-      error_sum += err*err;
+      double N_in = calculate_N_in(N, (k+1)*(rank+1),rank,size); // varying 
+      double *N_ins = NULL;
+      if (rank == 0) {
+        N_ins = (double*) malloc(size * sizeof(double));
+      }
+      MPI_Gather(&N_in,1,MPI_DOUBLE,N_ins,1,MPI_DOUBLE,0,MPI_COMM_WORLD);
+      if (rank == 0) {
+        double N_in_sum = 0.0;
+        for(int i = 0; i < size; i++) {
+          N_in_sum += N_ins[i];
+        }
+        double pi_est = 4.0 * N_in_sum / N;
+        free(N_ins);
+        end = MPI_Wtime();   
+        pi_est_sum += pi_est;
+        runtime_sum += (end - start);
+        double err = pi_est - M_PI;
+        error_sum += err*err;
+      }
+      else{
+        end = MPI_Wtime();
+      }
   }
-  double my_pi = pi_est_sum / K;
-  double rms_error = sqrt(error_sum / K);
-  double avg_runtime = runtime_sum / K;
-  printf("%d,%f,%f,%.6e\n", N, my_pi, rms_error, avg_runtime);
+
+  if (rank == 0) {
+    double my_pi = pi_est_sum / K;
+    double rms_error = sqrt(error_sum / K);
+    double avg_runtime = runtime_sum / K;
+    printf("%d,%f,%f,%.6e\n", N, my_pi, rms_error, avg_runtime);
+  }  
   MPI_Finalize();
   return 0;
 }

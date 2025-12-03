@@ -14,7 +14,7 @@
  * x^2 + y^2 < 1
  * retuns 1 if true, otherwise 0
  */
-int create_and_check_coordinates(void) {
+int create_and_check_coordinates() {
   double x, y;
 
   x = drand48();
@@ -31,21 +31,20 @@ int create_and_check_coordinates(void) {
 /* This function performs N checks and returns
  * the number of coordinate pairs which are within the circle.
  */
-int do_checks(int N) {
+int do_checks(int N,int rank,int size) {
+  int range = N/size;
+  range += (rank == size-1) ? N % size : 0;
   int N_in = 0;
-  for (int i = 0; i < N; i++)
+  for (int i = 0; i < range; i++)
     N_in += create_and_check_coordinates();
-
   return N_in;
 }
 
 /* This function calculates pi and returns the calculated value given a certain
  * number of random tries */
-double calculate_pi(int N, unsigned int seed) {
+double calculate_N_in(int N, unsigned int seed,int rank,int size) {
   /* seed the random number generator */
   srand48(seed);
-
-  double N_in = do_checks(N);
-  double my_pi = 4.0 * N_in / N;
-  return my_pi;
+  double N_in = do_checks(N,rank,size);
+  return N_in;
 }

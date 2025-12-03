@@ -1,7 +1,7 @@
-CC = gcc
+CC = mpicc
 
 CFLAGS = -I. -std=c11 -O2
-LIBS = -lm
+LIBS = -lm -lmpi
 
 DEPS = proto.h
 OBJ  = main.o calculate_pi.o

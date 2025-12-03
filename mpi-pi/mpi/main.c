@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <mpi.h>
 #ifndef M_PI
 #define M_PI 3.141592653589793
 #endif
@@ -18,7 +19,14 @@
  * The program takes one argument: the number of samples to use.
  */
 int main(int argc, char *argv[]) {
-  clock_t start, end;
+  MPI_Init(&argc, &argv);
+
+  int size, rank;
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  printf("Hello from process %d of %d\n", rank, size);
+
+  double start, end;
 
   int N; /* the total count of random coordinates vectors */
   if (argc != 2) {
@@ -34,17 +42,18 @@ int main(int argc, char *argv[]) {
   double pi_est_sum = 0.0;
 
   for(int k = 0; k < K; k++) {
-      start = clock();
+      start = MPI_Wtime();
       double pi_est = calculate_pi(N, k+1); // varying seed
-      end = clock();
+      end = MPI_Wtime();
       pi_est_sum += pi_est;
-      runtime_sum += ((double)(end - start)) / CLOCKS_PER_SEC;
+      runtime_sum += (end - start);
       double err = pi_est - M_PI;
       error_sum += err*err;
   }
   double my_pi = pi_est_sum / K;
   double rms_error = sqrt(error_sum / K);
   double avg_runtime = runtime_sum / K;
-  printf("%d,%f,%f,%f\n", N, my_pi, rms_error, avg_runtime);
+  printf("%d,%f,%f,%.6e\n", N, my_pi, rms_error, avg_runtime);
+  MPI_Finalize();
   return 0;
 }

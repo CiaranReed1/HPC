@@ -36,12 +36,13 @@ int main(int argc, char *argv[]) {
   }
   N = atoi(argv[1]);
 
-  int K = 1000; // number of independent runs
+  int K = 100; // number of independent runs
   double error_sum = 0.0;
   double runtime_sum = 0.0;
   double pi_est_sum = 0.0;
 
   for(int k = 0; k < K; k++) {
+      MPI_Barrier(MPI_COMM_WORLD);
       start = MPI_Wtime();
       double N_in = calculate_N_in(N, (k+1)*(rank+1),rank,size); // varying 
       double *N_ins = NULL;

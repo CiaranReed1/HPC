@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 
   for(int k = 0; k < K; k++) {
       start = MPI_Wtime();
-      double pi_est = calculate_pi(N, k+1); // varying seed
+      double pi_est = calculate_pi(N, k+1*(rank+1)); // varying seed
       end = MPI_Wtime();
       pi_est_sum += pi_est;
       runtime_sum += (end - start);

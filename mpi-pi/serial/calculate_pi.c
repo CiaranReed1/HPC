@@ -41,9 +41,9 @@ int do_checks(int N) {
 
 /* This function calculates pi and returns the calculated value given a certain
  * number of random tries */
-double calculate_pi(int N) {
+double calculate_pi(int N, unsigned int seed) {
   /* seed the random number generator */
-  srand48(42);
+  srand48(seed);
 
   double N_in = do_checks(N);
   double my_pi = 4.0 * N_in / N;

@@ -28,14 +28,20 @@ int main(int argc, char *argv[]) {
   }
   N = atoi(argv[1]);
 
+  int nIter = 1000;
+  double my_pi_total = 0.0;
+  double time_total = 0.0;
+  
+for (int i = 0; i < nIter; i++){
   start = clock();
-
-  double my_pi = calculate_pi(N);
-
+  my_pi_total += calculate_pi(N,i);
   end = clock();
+  time_total += ((double)end - start) / CLOCKS_PER_SEC;
+}
 
-  double time = ((double)end - start) / CLOCKS_PER_SEC;
 
+  double my_pi = my_pi_total / nIter;
+  double time = time_total / nIter;
   double error = M_PI - my_pi;
   printf("%d, %.20f,%.20f,%g\n",N, my_pi, error,time);
  

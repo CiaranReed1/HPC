@@ -28,23 +28,23 @@ int main(int argc, char *argv[]) {
   }
   N = atoi(argv[1]);
 
-  int nIter = 1000;
-  double my_pi_total = 0.0;
-  double time_total = 0.0;
-  
-for (int i = 0; i < nIter; i++){
-  start = clock();
-  my_pi_total += calculate_pi(N,i);
-  end = clock();
-  time_total += ((double)end - start) / CLOCKS_PER_SEC;
-}
+  int K = 1000; // number of independent runs
+  double error_sum = 0.0;
+  double runtime_sum = 0.0;
+  double pi_est_sum = 0.0;
 
-
-  double my_pi = my_pi_total / nIter;
-  double time = time_total / nIter;
-  double error = M_PI - my_pi;
-  printf("%d, %.20f,%.20f,%g\n",N, my_pi, error,time);
- 
-
+  for(int k = 0; k < K; k++) {
+      start = clock();
+      double pi_est = calculate_pi(N, k+1); // varying seed
+      end = clock();
+      pi_est_sum += pi_est;
+      runtime_sum += ((double)(end - start)) / CLOCKS_PER_SEC;
+      double err = pi_est - M_PI;
+      error_sum += err*err;
+  }
+  double my_pi = pi_est_sum / K;
+  double rms_error = sqrt(error_sum / K);
+  double avg_runtime = runtime_sum / K;
+  printf("%d,%f,%f,%f\n", N, my_pi, rms_error, avg_runtime);
   return 0;
 }

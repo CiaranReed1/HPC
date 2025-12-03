@@ -6,7 +6,7 @@
 #SBATCH -J cal_pi  #a name for our job
 #SBATCH -o /dev/null #the logfile
 #SBATCH -e /dev/null  #the error file
-#SBATCH -p shared.q #the queue we want to use
+#SBATCH -p shared #the queue we want to use
 #SBATCH -t 00:30:00 ## the maximum run time
 # Need to ensure the right MPI module is loaded -
 # i.e. the same module which the program was compiled with.

@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
     double my_pi = pi_est_sum / K;
     double rms_error = sqrt(error_sum / K);
     double avg_runtime = runtime_sum / K;
-    printf("%d,%f,%f,%.6e\n", N, my_pi, rms_error, avg_runtime);
+    printf("%d,%d,%f,%f,%.6e\n", size,N, my_pi, rms_error, avg_runtime);
   }  
   MPI_Finalize();
   return 0;

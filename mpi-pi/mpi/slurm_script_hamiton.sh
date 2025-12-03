@@ -3,7 +3,7 @@
 # Batch script for bash users
 #
 #SBATCH -N 1 #the number of nodes we are using
-#SBATCH -n 8 #the number of cores we are using
+#SBATCH -n 16 #the number of cores we are using
 #SBATCH -J cal_pi  #a name for our job
 #SBATCH -o /dev/null #the logfile
 #SBATCH -e /dev/null  #the error file
@@ -22,9 +22,9 @@ module list #write a list of used modules to the outputfile
 # Run the program
 #add the correct command to run the program below
 make 
-echo "N,calculated_pi,error,time" > pll_ham.dat
-for i in $(seq 1 1 2000); do
-    mpirun -n 8./calcpi "$i" >> pll_ham.dat
+echo "size,N,calculated_pi,error,time" > pll_ham.dat
+for i in $(seq 1 1 $SLURM_NTASKS); do
+    mpirun --bind-to none -n "$i" ./calcpi 10000000 >> pll_ham.dat
 done
 make clean
 

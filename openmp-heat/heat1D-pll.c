@@ -46,16 +46,13 @@ double diff(double *unew, double *u, int N){
 }
 
 int main(int argc, char *argv[]){
-
 	int nThreads = argc > 1 ? atoi(argv[1]) : 1;
 	omp_set_num_threads(nThreads);
 	int N = argc > 2 ? atoi(argv[2]) : 1<<10;
-
-	#pragma omp parallel
-	{
-		printf("Thread %d of %d says hello!\n", omp_get_thread_num(), omp_get_num_threads());
-	}
-
+	//#pragma omp parallel
+	//{
+	//	printf("Thread %d of %d says hello!\n", omp_get_thread_num(), omp_get_num_threads());
+	//}
 	double maxdiff = 2.0*epsilon;
 	double *u, *unew;
 	u = (double*) malloc(N * sizeof(double));
@@ -72,7 +69,7 @@ int main(int argc, char *argv[]){
 	}
 	double end_t = omp_get_wtime();
 	double total_t = end_t - start_t;
-	printf("%d,%d,%2.16f,%d,\n",nThreads,N, total_t, iter);
+	printf("%d,%d,%2.16f,%d\n",nThreads,N, total_t, iter);
 	free(u);
 	free(unew);
 	return 0;

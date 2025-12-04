@@ -1,2 +1,7 @@
 By adding a pll for loop to the init we can parallelise this function. However it wasnt a particularly demanding function.
 It is only called once at the start of the program so it yields very few benefits in terms of speedup. 
+
+I only saw significant speedups using parallel after i implemented the coloring. nothing else made  a big difference, and parallelising the base was actually detrimental
+Adding the ghost cell boundary conditions increased the number of iterations substantially. It would be hard to compare performance as we are comparing two different simulations at this point
+
+

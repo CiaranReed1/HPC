@@ -1,6 +1,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 const int M = 512;
 const int N = 512;
@@ -16,16 +17,16 @@ void init(double unew[M][N]){
 	*/
 	for ( i = 1; i < M - 1; i++ ){
 		unew[i][0] = hot;
-	}
+	} //left side (not corners)
 	for ( i = 1; i < M - 1; i++ ){
 		unew[i][N-1] = hot;
-	}
+	} // right side (not corners)
 	for ( j = 0; j < N; j++ ){
 		unew[M-1][j] = hot;
-	}
+	} //bottom side (whole side)
 	for ( j = 0; j < N; j++ ){
 		unew[0][j] = cold;
-	}
+	} //top side (whole side)
 
 	/*
 	Average the boundary values, to come up with a reasonable
@@ -105,7 +106,7 @@ int main ( int argc, char *argv[] ){
 	printf ( "\n" );
 	printf ( "  The iteration will be repeated until the change is <= %f\n", epsilon );
 	maxdiff = 2.0*epsilon;
-	
+	clock_t start_t = clock();
 	// initialize the unew field
 	init(unew);
 
@@ -138,10 +139,13 @@ int main ( int argc, char *argv[] ){
 			printf ( "  %8d  %f\n", iter, maxdiff );
 		}
 	}
+	clock_t end_t = clock();
+	double total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
 	printf ( "\n" );
 	printf ( "  %8d  %f\n", iter, maxdiff );
 	printf ( "\n" );
 	printf ( "  Error tolerance achieved.\n" );
+	printf ( "  Total time = %f seconds.\n", total_t );
 	/* 
 	Terminate. 
 	*/

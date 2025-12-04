@@ -1,0 +1,2 @@
+By adding a pll for loop to the init we can parallelise this function. However it wasnt a particularly demanding function.
+It is only called once at the start of the program so it yields very few benefits in terms of speedup. 

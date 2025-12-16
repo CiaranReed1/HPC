@@ -1,0 +1,2 @@
+the New 2D code completed with 17103 Iterations in 47.887487 Seconds.
+the old Openmp coce completed with 16955 Iterations in 13.285091 Seconds. (Running on 8 threads on 4 cores on my laptop) 

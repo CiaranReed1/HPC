@@ -3,7 +3,6 @@
 # include <math.h>
 # include <omp.h>
 
-
 int main ( int argc, char *argv[] );
 
 /******************************************************************************/
@@ -242,16 +241,17 @@ int main ( int argc, char *argv[] )
   Once they have all computed their values, we use a CRITICAL section
   to update DIFF.
 */
-    diff = 0.0;
-# pragma omp parallel for shared ( u, w ) private ( i, j ) reduction ( max : diff )
+diff = 0.0;
+#pragma omp parallel for reduction ( max : diff ) default (none) private ( i, j) shared ( u, w )
       for ( i = 1; i < M - 1; i++ )
       {
         for ( j = 1; j < N - 1; j++ )
         {
-          diff = fmax(diff, fabs ( w[i][j] - u[i][j] ) );
+         diff = fmax(diff, fabs(w[i][j] - u[i][j]));
         }
       }
-    
+
+
     iterations++;
     if ( iterations == iterations_print )
     {

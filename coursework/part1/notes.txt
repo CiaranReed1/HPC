@@ -1,0 +1,8 @@
+Note initial serial runtime : 802.515029
+
+Plan of action:
+-parallelise using openmp
+-perform strong scaling on hamilton up to 128 processes
+-do this for maybe 2 problem sizes and investigate if any difference
+-use python to create strong scaling plot 
+-create report detailing the parallelisation strategy, maths for speedup, results  

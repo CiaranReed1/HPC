@@ -17,6 +17,7 @@ int main( int argc, char **argv ){
     double     xloc[(maxn/4)+2][maxn];	// Note: this is technically oversized for Rank 0 & 3
     double     xnew[(maxn/4)+2][maxn];
 	MPI_Status status;
+	MPI_Request requests[4] =  {MPI_REQUEST_NULL, MPI_REQUEST_NULL, MPI_REQUEST_NULL, MPI_REQUEST_NULL};
 	
     MPI_Init( &argc, &argv );
 
@@ -123,25 +124,27 @@ int main( int argc, char **argv ){
     do {
 		/* Send up unless I'm at the top, then receive from below */
 		/* Note the use of xloc[i] for &xloc[i][0] */
-		if (rank < size - 1){
-			printf("Sending row %d from rank %d to rank %d\n", maxn/size, rank, rank+1);
-		    MPI_Send( xloc[maxn/size], maxn, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD );
-		}
 		if (rank > 0){
 			printf("Recieving row %d from rank %d to rank %d\n", 0, rank-1, rank);
-		    MPI_Recv( xloc[0], maxn, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, &status );
+		    MPI_Irecv( xloc[0], maxn, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, requests );
 		}
+		if (rank < size - 1){
+			printf("Sending row %d from rank %d to rank %d\n", maxn/size, rank, rank+1);
+		    MPI_Isend( xloc[maxn/size], maxn, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD, requests + 1);
+		}
+		
 		/* this does not deadlock as the top one will receive whilst all the others send, and it will cascade down the sim*/
 
 		/* Send down unless I'm at the bottom */
-		if (rank > 0){ 
-			printf("Sending row %d from rank %d to rank %d\n", 1, rank, rank-1);
-		    MPI_Send( xloc[1], maxn, MPI_DOUBLE, rank - 1, 1, MPI_COMM_WORLD );
-		}
 		if (rank < size - 1){
 			printf("Recieving row %d from rank %d to rank %d\n", maxn/size+1, rank+1, rank);
-		    MPI_Recv( xloc[maxn/size+1], maxn, MPI_DOUBLE, rank + 1, 1, MPI_COMM_WORLD, &status );
+		    MPI_Irecv( xloc[maxn/size+1], maxn, MPI_DOUBLE, rank + 1, 1, MPI_COMM_WORLD, requests + 2 );
 		}
+		if (rank > 0){ 
+			printf("Sending row %d from rank %d to rank %d\n", 1, rank, rank-1);
+		    MPI_Isend( xloc[1], maxn, MPI_DOUBLE, rank - 1, 1, MPI_COMM_WORLD, requests + 3 );
+		}
+		MPI_Waitall(4, requests, MPI_STATUSES_IGNORE);
 		
 		/* Compute new values (but not on boundary) */
 		iter++;

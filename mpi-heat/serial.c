@@ -4,12 +4,15 @@ https://www.mcs.anl.gov/research/projects/mpi/tutorial/mpiexmpl/contents.html
 */
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 
 /* This example handles a maxn x maxn mesh, on 4 processors only. */
 #define maxn 24
 
 int main( int argc, char **argv ){
 
+	__clock_t start, end;
+	start = clock();
     int        value, i, j, iter;
     int        i_first, i_last;
     double     diffnorm;
@@ -27,15 +30,27 @@ int main( int argc, char **argv ){
 		}
 	}
 	/* Fill Boundaries */
-	for (j=0; j<maxn; j++){
-		xloc[i_first-1][j] 	= 100.0;	// top
+	double left = 20.0, top = 100.0, bottom = 0.0, right = 80.0;
+	
+	/* corners set to average of the adjacent sides*/
+	xloc[i_first-1][0] = (top+left) / 2.0; // top-left corner
+	xloc[i_first-1][maxn-1] = (top+right) / 2.0; // top-right corner
+	xloc[i_last+1][0] = (bottom+left) / 2.0; // bottom-left corner
+	xloc[i_last+1][maxn-1] = (bottom+right) / 2.0; // bottom-right corner
+
+
+	for (j=1; j<maxn-1; j++){
+
+		xloc[i_first-1][j] 	= top;	// top
 	}
-	for (j=0; j<maxn; j++){
-		xloc[i_last+1][j] 	= 0.0;		// bottom
+
+	for (j=1; j<maxn-1; j++){
+		xloc[i_last+1][j] 	= bottom;		// bottom
 	}
+
 	for (i=i_first; i<=i_last; i++){
-		xloc[i][0] 			= 20.0;		// left
-		xloc[i][maxn-1] 	= 80.0;		// right
+		xloc[i][0] 			= left;		// left
+		xloc[i][maxn-1] 	= right;		// right
 	}
 	
 
@@ -60,6 +75,11 @@ int main( int argc, char **argv ){
 		diffnorm = sqrt( diffnorm );
 		printf( "At iteration %d, diff is %e\n", iter, diffnorm );
     } while ((diffnorm > 1e-3) && (iter < 1000));
-
+	end = clock();
+	double cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+	printf("\n");
+	printf("Successful completion\n");
+	printf("Converged after %d iterations\n", iter);
+	printf("Total time: %f seconds\n", cpu_time_used);
     return 0;
 }

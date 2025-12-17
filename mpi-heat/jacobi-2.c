@@ -14,8 +14,8 @@ int main( int argc, char **argv ){
     int        rank, value, size, errcnt, toterr, i, j, iter;
     int        i_first, i_last;
     double     diffnorm, gdiffnorm;
-    double     xloc[(maxn/4)+2][maxn];	// Note: this is technically oversized for Rank 0 & 3
-    double     xnew[(maxn/4)+2][maxn];
+    double     xloc[(maxn/2)+2][maxn];	// Note: this is technically oversized for Rank 0 & 3
+    double     xnew[(maxn/2)+2][maxn];
 	MPI_Status status;
 	
     MPI_Init( &argc, &argv );
@@ -23,7 +23,7 @@ int main( int argc, char **argv ){
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
     MPI_Comm_size( MPI_COMM_WORLD, &size );
 
-    if (size != 4){	// Hardcoding a four-process decomposition
+    if (size != 2){	// Hardcoding a two-process decomposition
     	MPI_Abort( MPI_COMM_WORLD, 1 );
 	}
 	
@@ -91,7 +91,7 @@ int main( int argc, char **argv ){
 			xloc[i_first-1][j] 	= 100.0;	// top
 		}
 	}
-	if (rank==3){
+	if (rank==size -1){
 		for (j=0; j<maxn; j++){
 			xloc[i_last+1][j] 	= 0.0;		// bottom
 		}
@@ -123,24 +123,15 @@ int main( int argc, char **argv ){
     do {
 		/* Send up unless I'm at the top, then receive from below */
 		/* Note the use of xloc[i] for &xloc[i][0] */
-		if (rank < size - 1){
-			printf("Sending row %d from rank %d to rank %d\n", maxn/size, rank, rank+1);
-		    MPI_Send( xloc[maxn/size], maxn, MPI_DOUBLE, rank + 1, 0, MPI_COMM_WORLD );
+		if (rank > 0){ /*sending down*/
+			MPI_Sendrecv(xloc[i_first], maxn, MPI_DOUBLE, rank-1, 0,
+						 xloc[i_first-1], maxn, MPI_DOUBLE, rank-1, 0,
+						 MPI_COMM_WORLD, &status);
 		}
-		if (rank > 0){
-			printf("Recieving row %d from rank %d to rank %d\n", 0, rank-1, rank);
-		    MPI_Recv( xloc[0], maxn, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, &status );
-		}
-		/* this does not deadlock as the top one will receive whilst all the others send, and it will cascade down the sim*/
-
-		/* Send down unless I'm at the bottom */
-		if (rank > 0){ 
-			printf("Sending row %d from rank %d to rank %d\n", 1, rank, rank-1);
-		    MPI_Send( xloc[1], maxn, MPI_DOUBLE, rank - 1, 1, MPI_COMM_WORLD );
-		}
-		if (rank < size - 1){
-			printf("Recieving row %d from rank %d to rank %d\n", maxn/size+1, rank+1, rank);
-		    MPI_Recv( xloc[maxn/size+1], maxn, MPI_DOUBLE, rank + 1, 1, MPI_COMM_WORLD, &status );
+		if (rank < size - 1){ /*sending up*/
+			MPI_Sendrecv(xloc[i_last], maxn, MPI_DOUBLE, rank+1, 0,
+						 xloc[i_last+1], maxn, MPI_DOUBLE, rank+1, 0,
+						 MPI_COMM_WORLD, &status);
 		}
 		
 		/* Compute new values (but not on boundary) */

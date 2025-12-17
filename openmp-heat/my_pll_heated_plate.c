@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <omp.h>
 
 const int M = 500;
 const int N = 500;
@@ -11,45 +12,49 @@ const double cold = 0.0;
 
 void init(double unew[M][N]){
 	int i,j;
-	double mean;
+	double mean = 0.0;
 	/* 
 	Set the boundary values, which don't change. 
 	*/
-	for ( i = 1; i < M - 1; i++ ){
-		unew[i][0] = hot;
-	} //left side (not corners)
-	for ( i = 1; i < M - 1; i++ ){
-		unew[i][N-1] = hot;
-	} // right side (not corners)
-	for ( j = 0; j < N; j++ ){
-		unew[M-1][j] = hot;
-	} //bottom side (whole side)
-	for ( j = 0; j < N; j++ ){
-		unew[0][j] = cold;
-	} //top side (whole side)
-
+	#pragma omp parallel default(none) shared(unew,N,M,hot,cold) private(i,j) reduction(+:mean)
+	{
+		#pragma omp for
+		for ( i = 1; i < M - 1; i++ ){
+			unew[i][0] = hot;
+		} //left side (not corners)
+		#pragma omp for
+		for ( i = 1; i < M - 1; i++ ){
+			unew[i][N-1] = hot;
+		} // right side (not corners)
+		#pragma omp for
+		for ( j = 0; j < N; j++ ){
+			unew[M-1][j] = hot;
+		} //bottom side (whole side)
+		#pragma omp for
+		for ( j = 0; j < N; j++ ){
+			unew[0][j] = cold;
+		} //top side (whole side)
+	
 	/*
 	Average the boundary values, to come up with a reasonable
 	initial value for the interior.
 	*/
-	mean = 0.0;
-	for ( i = 1; i < M - 1; i++ ){
-		mean = mean + unew[i][0];
-	}
-	for ( i = 1; i < M - 1; i++ ){
-		mean = mean + unew[i][N-1];
-	}
-	for ( j = 0; j < N; j++ ){
-		mean = mean + unew[M-1][j];
-	}
-	for ( j = 0; j < N; j++ ){
-		mean = mean + unew[0][j];
+	
+		#pragma omp for 
+			for (i = 1;i < M - 1; i++ ){
+				mean = mean + unew[i][0] + unew[i][N-1];
+			}
+		#pragma omp for 
+			for (j = 0; j < N; j++){
+				mean = mean + unew[M-1][j] + unew[0][j];
+			}
 	}
 	mean = mean / ( double ) ( 2 * M + 2 * N - 4 );
 	
 	/* 
 	Initialize the interior solution to the mean value.
 	*/
+	#pragma omp parallel for default(none) shared(unew,mean,M,N) private(i,j)
 	for ( i = 1; i < M - 1; i++ ){
 		for ( j = 1; j < N - 1; j++ ){
 	  		unew[i][j] = mean;
@@ -62,11 +67,12 @@ void copy(double u[M][N], double unew[M][N]){
 	/*
 	Save the old solution in U.
 	*/
-	for ( i = 0; i < M; i++ ){
-		for ( j = 0; j < N; j++ ){
-			u[i][j] = unew[i][j];
+	#pragma omp parallel for default(none) shared(u,unew,N,M) private(i,j)
+		for ( i = 0; i < M; i++ ){
+			for ( j = 0; j < N; j++ ){
+				u[i][j] = unew[i][j];
+			}
 		}
-	}
 }
 
 void saveoutput(double unew[M][N], char output_file[80]){
@@ -95,6 +101,8 @@ int main ( int argc, char *argv[] ){
 	double u[M][N];
 	double unew[M][N];
 
+
+
 	printf ( "\n" );
 	printf ( "HEATED_PLATE\n" );
 	printf ( "  C version\n" );
@@ -105,8 +113,20 @@ int main ( int argc, char *argv[] ){
 	
 	printf ( "\n" );
 	printf ( "  The iteration will be repeated until the change is <= %f\n", epsilon );
+	printf("\n");
+	#pragma omp parallel
+	{
+    	#pragma omp single
+    	{
+        	printf("Using %d threads of %d available.\n",
+               omp_get_num_threads(),
+               omp_get_num_procs());
+    	}
+	}	
+	
+
 	maxdiff = 2.0*epsilon;
-	clock_t start_t = clock();
+	double start_t = omp_get_wtime();
 	// initialize the unew field
 	init(unew);
 
@@ -126,11 +146,15 @@ int main ( int argc, char *argv[] ){
 		The new solution W is the average of north, south, east and west neighbors.
 		*/
 		maxdiff = 0.0;
-		for ( i = 1; i < M - 1; i++ ){
-			for ( j = 1; j < N - 1; j++ ){
-				unew[i][j] = ( u[i-1][j] + u[i+1][j] + u[i][j-1] + u[i][j+1] ) / 4.0;
-				if (maxdiff < fabs ( unew[i][j] - u[i][j] )){
-					maxdiff = fabs ( unew[i][j] - u[i][j] );
+		#pragma omp parallel default(none) shared(unew,u,M,N) private(i,j) reduction(max:maxdiff)
+		{
+			#pragma omp for 
+			for ( i = 1; i < M - 1; i++ ){
+				for ( j = 1; j < N - 1; j++ ){
+					unew[i][j] = ( u[i-1][j] + u[i+1][j] + u[i][j-1] + u[i][j+1] ) / 4.0;
+					if (maxdiff < fabs ( unew[i][j] - u[i][j] )){
+						maxdiff = fabs ( unew[i][j] - u[i][j] );
+					}
 				}
 			}
 		}
@@ -139,8 +163,8 @@ int main ( int argc, char *argv[] ){
 			printf ( "  %8d  %f\n", iter, maxdiff );
 		}
 	}
-	clock_t end_t = clock();
-	double total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
+	double end_t = omp_get_wtime();
+	double total_t = (end_t - start_t);
 	printf ( "\n" );
 	printf ( "  %8d  %f\n", iter, maxdiff );
 	printf ( "\n" );

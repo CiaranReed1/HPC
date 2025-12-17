@@ -4,12 +4,15 @@ https://www.mcs.anl.gov/research/projects/mpi/tutorial/mpiexmpl/contents.html
 */
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 
 /* This example handles a maxn x maxn mesh, on 4 processors only. */
 #define maxn 24
 
 int main( int argc, char **argv ){
 
+	__clock_t start, end;
+	start = clock();
     int        value, i, j, iter;
     int        i_first, i_last;
     double     diffnorm;
@@ -60,6 +63,11 @@ int main( int argc, char **argv ){
 		diffnorm = sqrt( diffnorm );
 		printf( "At iteration %d, diff is %e\n", iter, diffnorm );
     } while ((diffnorm > 1e-3) && (iter < 1000));
-
+	end = clock();
+	double cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+	printf("\n");
+	printf("Successful completion\n");
+	printf("Converged after %d iterations\n", iter);
+	printf("Total time: %f seconds\n", cpu_time_used);
     return 0;
 }

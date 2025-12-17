@@ -67,7 +67,7 @@ int main( int argc, char **argv ){
     Interior init:			T=rank
     
     */
-
+	double start_time = MPI_Wtime();
 
     /* Note that top and bottom processes have one less row of interior points */
     i_first = 1;
@@ -103,6 +103,8 @@ int main( int argc, char **argv ){
 	
 	/* All the Ghost points / places being recieved into are uninitialized */
 
+
+	/* Print Initial Data */
 	for (int k=0; k<size; k++){
 		MPI_Barrier(MPI_COMM_WORLD);
 		if (k==rank){
@@ -129,6 +131,8 @@ int main( int argc, char **argv ){
 			printf("Recieving row %d from rank %d to rank %d\n", 0, rank-1, rank);
 		    MPI_Recv( xloc[0], maxn, MPI_DOUBLE, rank - 1, 0, MPI_COMM_WORLD, &status );
 		}
+		/* this does not deadlock as the top one will receive whilst all the others send, and it will cascade down the sim*/
+
 		/* Send down unless I'm at the bottom */
 		if (rank > 0){ 
 			printf("Sending row %d from rank %d to rank %d\n", 1, rank, rank-1);
@@ -154,6 +158,8 @@ int main( int argc, char **argv ){
 				xloc[i][j] = xnew[i][j];
 			}
 		}
+		/* on each rank, diffnorm is the sum of squared differences for that rank
+		but then we reduce and find the maximum of all the ranks and save that on each*/
 		MPI_Allreduce( &diffnorm, &gdiffnorm, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD );
 		gdiffnorm = sqrt( gdiffnorm );
 		if (rank == 0) {
@@ -161,6 +167,15 @@ int main( int argc, char **argv ){
 		}
     } while ((gdiffnorm > 1e-3) && (iter < 1000));
 
+	double end_time = MPI_Wtime();
+	if (rank==0){
+		printf("\n");
+		printf("Successful completion\n");
+		printf("Converged after %d iterations\n", iter);
+		printf("Total time: %f seconds\n", end_time - start_time);
+	}
     MPI_Finalize( );
+
+	
     return 0;
 }

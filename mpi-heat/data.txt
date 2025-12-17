@@ -2,3 +2,8 @@ Jacobi - Unedited :
 	Successful completion
 	Converged after 921 iterations
 	Total time: 0.030054 seconds
+
+Jaboci Sendrecv:	
+	Successful completion
+	Converged after 921 iterations
+	Total time: 0.011634 seconds

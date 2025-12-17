@@ -35,6 +35,6 @@ double stim(int i, int j) {
   }
 }
 
-inline double f(double u, double v) { return u * (1.0 - u) * (u - b) - v; }
+static inline double f(double u, double v) { return u * (1.0 - u) * (u - b) - v; }
 
-inline double g(double u, double v) { return c * (a * u - v); }
+static inline double g(double u, double v) { return c * (a * u - v); }

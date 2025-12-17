@@ -1,0 +1,11 @@
+As far as splitting a u[M][N][O] with O = N > M onto 4 processess. I guess it depends on the speed of the computation compared to the speed of sending messages.
+If sending messages takes a long time, then it would be better to do more heavy computation on each process and send the least amount of messages. 
+Similarly if messages take little time then it would be better to send more frequent messages? 
+
+We could split 4x1x1, or 2x2x1. The first being 4 hoirzontal "Slabs" that are relatively short (height) bit  wide and long
+ the second being 4 long cuboids in a grid
+
+Taking the 4x1x1, Each process would have an [M/4 + 2][N][O] array, +2 for boundary exchanges. (only 1 needed on top and bottom) 
+we would again only need 6 memory transfers, each of a 2d plane of size NxO up and below. This would be a large transfer,
+but MPI is built for large bandwidth messages. so this is exactly the use case for this. 
+The actual computation would be contiguous in memory as it is split along the slowest axis. So the computation would be fast. 

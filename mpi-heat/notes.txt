@@ -9,3 +9,20 @@ Taking the 4x1x1, Each process would have an [M/4 + 2][N][O] array, +2 for bound
 we would again only need 6 memory transfers, each of a 2d plane of size NxO up and below. This would be a large transfer,
 but MPI is built for large bandwidth messages. so this is exactly the use case for this. 
 The actual computation would be contiguous in memory as it is split along the slowest axis. So the computation would be fast. 
+
+Modifying for 2 processes (starting from sendrecv example:
+- changed hard abort to 2 processes
+- changed xloc and xnew to be /2 instead of /4
+- On grid init changed hard code of 3 to size - 1
+- already using sendrecv without hard coding so halo exchange should work fine
+
+In theory, expanding this to 8 or more should not be that difficult. The xloc can be soft coded with the siz. 
+You just have to make sure the maxn % size = 0 unless you include the functionality for one rank to include the remainder and set its max i uniquely. 
+
+If we had maxn processes then every process would only have a single row of N interior points. 
+But it would also need the temporary ghost indecies for the row above and below, this would be (2 * maxn) arrays. 
+There would need to be (maxn * 2 -2) messages, each of size N. 
+
+To do a weak scaling we must also increase the problem size respectively. If we decrease the ranks by a factor of 2, then the problem size must also decrease by a factor of 2.
+Given that we are using a 2D: if x = initial array size, then ((x^2)/2)^1/2 = y, or y = x/root(2). 
+More generally, for a factor of p on the problem size, ((x^2)p)^1/2 = y. and y = x * root(p) 

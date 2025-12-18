@@ -21,7 +21,7 @@ OUTFILE="outputs/job_${SLURM_JOB_ID}_${OMP_NUM_THREADS}cores_${SRC_BASENAME}.out
 exec > "$OUTFILE" 2>&1 
 
 
-gcc "$SRC" -lm -fopenmp -o bin/part1_${OMP_NUM_THREADS}_${SRC_BASENAME} 
+gcc "src/$SRC" -lm -fopenmp -o bin/part1_${OMP_NUM_THREADS}_${SRC_BASENAME} 
 if [ $? -ne 0 ]; then
     echo "Compilation failed!"
     exit 1

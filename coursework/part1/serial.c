@@ -130,8 +130,7 @@ int main(int argc, char **argv) {
   free(dv);
   end = clock();
   double time_taken = ((double)(end - start))/CLOCKS_PER_SEC;
-  printf("Successful completion of serial execution\n");
-  printf("Time taken for serial execution: %f seconds\n", time_taken);
+  printf("serial,%3.5f\n", time_taken);
 
   return 0;
 }

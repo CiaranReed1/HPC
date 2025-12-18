@@ -2,7 +2,7 @@
 
 # Request resources:
 #SBATCH -N 1		# number of compute nodes. 
-#SBATCH -c 4		# number of CPU cores, one per thread, up to 128
+#SBATCH -c 1		# number of CPU cores, one per thread, up to 128
 #SBATCH --mem=1G	# memory required, up to 250G on standard nodes
 #SBATCH --time=0:15:0	# time limit for job (format:  days-hours:minutes:seconds)
 
@@ -14,7 +14,9 @@ module purge
 module load gcc
 
 # compile part.1c into part1
-gcc -fopenmp -lm part1.c -o part1 -lm
+gcc -fopenmp -lm serial.c -o serial -lm
 
-# run part1 with 4 threads
-OMP_NUM_THREADS=4 ./part1
+# run part1 with 1 thread
+echo "serial,time_seconds" > serial_speed.dat
+./serial >> serial_speed.dat
+rm serial 

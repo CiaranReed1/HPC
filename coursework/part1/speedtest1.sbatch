@@ -17,7 +17,7 @@ module load gcc
 # compile part.1c into part1
 SRC_BASENAME=$(basename "$SRC" .c)
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
-OUTFILE="job_${SLURM_JOB_ID}_${OMP_NUM_THREADS}cores_$(SRC_BASENAME).out"
+OUTFILE="outputs/job_${SLURM_JOB_ID}_${OMP_NUM_THREADS}cores_$(SRC_BASENAME).out"
 exec > "$OUTFILE" 2>&1 
 
 

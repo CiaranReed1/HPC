@@ -18,13 +18,14 @@ clean:
 	@rm outputs/*
 
 CORES = 1 2 4 8 16 32 64 128
-SPEEDFILE ?= speedtest_1.datS
 SRC= ?= part1.c
+BASENAME := $(notdir $(SRC:.c=))
+SPEEDFILE := newData/$(BASENAME)_strong_scaling.dat
 .PHONY: scaling
 scaling:
 	@echo "Submitting strong scaling jobs..."
 	@echo "cores,time_seconds" > $(SPEEDFILE)
 	@for c in $(CORES); do \
 		echo "  -> Submitting job with $$c cores"; \
-		sbatch -c $$c --export=ALL,SPEEDFILE=$(SPEEDFILE),SRC=$(SRC) speedtest1.sbatch; \
+		sbatch -c $$c --export=ALL,SRC=$(SRC),SPEEDFILE=$(SPEEDFILE) speedtest1.sbatch; \
 	done

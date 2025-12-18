@@ -28,8 +28,11 @@ Init:
 -for now, just implement with the basic for. 
 -On attempting to manually collapse I noticed each iteration requires a division, I have a hunch this will be expensive so i will run a test now 
 
-Step:
--Very similar situation to Init with regards to collapse
+Step
+-Unlike init, step does not use i and j in the loop. Therefore calculating  idx using i and j is just extra work. 
+-I suspect that by collapsing the for loop this will get gains, i will test for basic implementation, collapsed and manual collapsed
+
+
 
 Norm:
 -Easily parallelised using a for reduction clause, but again like step and init it could be potentially be improved by making a 1d array

@@ -6,9 +6,10 @@
 
 /* this has no data dependencies and is such trivially parallellised. 
 that being said i should investigate whether collapsing both loops yields any gains 
-(i suspect that it does not and only using one parallel for will be sufficient)*/
+(i suspect that it does not and only using one parallel for will be sufficient unless for very large core counts)*/
 void init(double *u, double *v) {
   int idx;
+  #pragma omp parallel for default(none) shared(u,v) private(idx,i,j)
   for (int i = 0; i < M; i++) {
     for (int j = 0; j < N; j++) {
       idx = i * N + j;

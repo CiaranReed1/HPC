@@ -136,7 +136,7 @@ int main(int argc, char **argv) {
     }
   }
   // write norms output
-  char filename[30];
+  char filename[50];
   sprintf(filename, "%d_cores_part1_step_manual.dat", omp_get_max_threads());
   FILE *fptr = fopen(filename, "w");
   fprintf(fptr, "#t\t\tnrmu\t\tnrmv\n");

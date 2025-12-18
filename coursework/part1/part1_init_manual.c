@@ -14,14 +14,14 @@ so the for loop will run from 0 to MN -1 inclusive
 However this requires doing two divisions every iteration so this may be detrimental
 */
 void init(double *u, double *v) {
-  int idx,i,j;
-  #pragma omp parallel for default(none) shared(u,v,N,M,uhi,ulo,vhi,vlo) private(idx,i,j)
-  for (idx = 0; idx < M*N; idx++) {
-    i = idx / N; // row index
-    j = idx % N; // column index
+  int idx,i,j,size;
+  size = M*N;
+  #pragma omp parallel for default(none) shared(u,v,N,M,uhi,ulo,vhi,vlo,size) private(idx,i,j)
+  for (idx = 0;idx < size;idx++){
+    i = idx / N;
+    j = idx % N;
     u[idx] = ulo + (uhi - ulo) * 0.5 * (1.0 + tanh((i - M / 2) / 16.0)); //smooth gradient in vertical direction
     v[idx] = vlo + (vhi - vlo) * 0.5 * (1.0 + tanh((j - N / 2) / 16.0)); //smooth gradient in horizontal direction
-    
   }
 }
 
@@ -135,8 +135,8 @@ int main(int argc, char **argv) {
     }
   }
   // write norms output
-  char filename[30];
-  sprintf(filename, "%d_cores_part1_init_slow.dat", omp_get_max_threads());
+  char filename[50];
+  sprintf(filename, "%d_cores_part1_init_manual.dat", omp_get_max_threads());
   FILE *fptr = fopen(filename, "w");
   fprintf(fptr, "#t\t\tnrmu\t\tnrmv\n");
   for (int k = 0; k < (T / m); k++) {

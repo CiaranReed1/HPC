@@ -86,7 +86,7 @@ void step(const double *du, const double *dv, double *u, double *v) {
 double norm(const double *x) {
   double nrmx = 0.0;
   int idx,i,j;
-  #pragma omp parallel for default(none) shared(x,M,N) private(idx,i,j) reduction(+:nrmx)
+  #pragma omp parallel for default(none) shared(x,M,N) private(idx,i,j) reduction(+:nrmx) collapse(2)
   for (i = 0; i < M; i++) {
     for (j = 0; j < N; j++) {
       idx = i * N + j;
@@ -136,8 +136,8 @@ int main(int argc, char **argv) {
     }
   }
   // write norms output
-  char filename[30];
-  sprintf(filename, "%d_cores_part1_norm.dat", omp_get_max_threads());
+  char filename[50];
+  sprintf(filename, "%d_cores_part1_norm_collapse.dat", omp_get_max_threads());
   FILE *fptr = fopen(filename, "w");
   fprintf(fptr, "#t\t\tnrmu\t\tnrmv\n");
   for (int k = 0; k < (T / m); k++) {

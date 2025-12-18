@@ -15,7 +15,6 @@ However this requires doing two divisions every iteration so this may be detrime
 */
 void init(double *u, double *v) {
   int idx,i,j;
-  #pragma omp parallel for default(none) shared(u,v,N,M,uhi,ulo,vhi,vlo) private(idx,i,j)
   for (i = 0;i<M;i++){
     for (j = 0;j<N;j++){
       idx = i * N + j;
@@ -87,6 +86,7 @@ void step(const double *du, const double *dv, double *u, double *v) {
 double norm(const double *x) {
   double nrmx = 0.0;
   int idx,i,j;
+  #pragma omp parallel for default(none) shared(x,M,N) private(idx,i,j) reduction(+:nrmx)
   for (i = 0; i < M; i++) {
     for (j = 0; j < N; j++) {
       idx = i * N + j;
@@ -136,8 +136,8 @@ int main(int argc, char **argv) {
     }
   }
   // write norms output
-  char filename[40];
-  sprintf(filename, "%d_cores_part1_init.dat", omp_get_max_threads());
+  char filename[50];
+  sprintf(filename, "%d_cores_part1_norm_default.dat", omp_get_max_threads());
   FILE *fptr = fopen(filename, "w");
   fprintf(fptr, "#t\t\tnrmu\t\tnrmv\n");
   for (int k = 0; k < (T / m); k++) {

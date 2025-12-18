@@ -15,6 +15,7 @@ However this requires doing two divisions every iteration so this may be detrime
 */
 void init(double *u, double *v) {
   int idx,i,j;
+  #pragma omp parallel for default(none) shared(u,v,N,M,uhi,ulo,vhi,vlo) private(idx,i,j) collapse(2)
   for (i = 0;i<M;i++){
     for (j = 0;j<N;j++){
       idx = i * N + j;
@@ -68,15 +69,11 @@ void dxdt(double *du, double *dv, const double *u, const double *v) {
 //also similar to init, i could condense this into one loop over the range of idx 
 
 /*unlike init, each step here does not require calculating i and j from idx 
-and so i believe collapsing this may yield performace gains. 
-collapsing this removes the need to calculate idx every iteration
-again the maths here uses: max value of index when (i = M-1, j = N-1): idx = (M-1)*N + N-1 = MN - N + N -1 = MN -1
-so the for loop will run from 0 to MN -1 inclusive */
+and so i believe this may yield performace gains*/
 void step(const double *du, const double *dv, double *u, double *v) {
   int idx,i,j;
-  #pragma omp parallel for default(none) shared(u,v,du,dv,M,N,dt) private(idx,i,j) collapse(2)
   for (i = 0; i < M; i++) {
-     for(j=0;j<N;j++){
+    for (j = 0; j < N; j++) {
       idx = i * N + j;
      //for every grid point update u and v
       u[idx] += dt * du[idx];
@@ -140,7 +137,7 @@ int main(int argc, char **argv) {
   }
   // write norms output
   char filename[50];
-  sprintf(filename, "%d_cores_part1_step_collapse.dat", omp_get_max_threads());
+  sprintf(filename, "%d_cores_part1_init_collapse.dat", omp_get_max_threads());
   FILE *fptr = fopen(filename, "w");
   fprintf(fptr, "#t\t\tnrmu\t\tnrmv\n");
   for (int k = 0; k < (T / m); k++) {

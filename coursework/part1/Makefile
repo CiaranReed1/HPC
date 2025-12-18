@@ -7,7 +7,7 @@ BINS = serial part1
 SLURM_OUT = slurm-*.out *.err
 
 # Other generated files
-DATA = serial.dat part1.dat correctness_check.txt
+DATA = part1_*_cores.dat correctness_check.txt
 
 .PHONY: clean
 

@@ -14,6 +14,8 @@ DATA = part1_*_cores.dat correctness_check_*.txt
 clean:
 	@echo "Cleaning binaries, SLURM outputs, and data files..."
 	@rm -f $(BINS) $(SLURM_OUT) $(DATA)
+	@rm bin/*
+	@rm outputs/*
 
 CORES = 1 2 4 8 16 32 64 128
 SPEEDFILE ?= speedtest_1.datS

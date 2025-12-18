@@ -136,7 +136,7 @@ int main(int argc, char **argv) {
   }
   // write norms output
   char filename[30];
-  sprintf(filename, "part1_%d_cores.dat", omp_get_max_threads());
+  sprintf(filename, "%d_cores_part1_init_slow.dat", omp_get_max_threads());
   FILE *fptr = fopen(filename, "w");
   fprintf(fptr, "#t\t\tnrmu\t\tnrmv\n");
   for (int k = 0; k < (T / m); k++) {

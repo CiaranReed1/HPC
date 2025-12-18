@@ -23,5 +23,5 @@ scaling:
 	@echo "cores,time_seconds" > speedtest_1.dat
 	@for c in $(CORES); do \
 		echo "  -> Submitting job with $$c cores"; \
-		sbatch -c $$c --export=NUM_CORES=$$c speedtest1.sbatch; \
+		sbatch -c $$c speedtest1.sbatch; \
 	done

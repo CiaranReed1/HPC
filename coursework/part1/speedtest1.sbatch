@@ -1,10 +1,9 @@
 #!/bin/bash
-
 # Request resources:
 #SBATCH -N 1		# number of compute nodes. 
 #SBATCH --mem=10G	# memory required, up to 250G on standard nodes
 #SBATCH -e /dev/null
-#SBATCH -output=/dev/null
+#SBATCH --output=/dev/null
 #SBATCH --cpus-per-task=1
 #SBATCH --time=0:20:0	# time limit for job (format:  days-hours:minutes:seconds)
 # Specify the tasks to run:
@@ -17,12 +16,10 @@ module load gcc
 
 # compile part.1c into part1
 gcc -fopenmp -lm part1.c -o part1 -lm
-
-OUTFILE="job_${SLURM_JOB_ID}_${NUM_CORES}cores.out"
+export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+OUTFILE="job_${SLURM_JOB_ID}_${OMP_NUM_THREADS}cores.out"
 exec > "$OUTFILE" 2>&1   # redirect all stdout/stderr
 
-
-export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 echo "Running with $OMP_NUM_THREADS threads"
 ./part1 >> speedtest_1.dat
 

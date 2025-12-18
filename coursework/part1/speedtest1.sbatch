@@ -15,13 +15,13 @@ module purge
 module load gcc
 
 # compile part.1c into part1
-gcc -fopenmp -lm part1.c -o part1 -lm
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+gcc -fopenmp part1.c -o part1_$OMP_NUM_THREADS -lm
 OUTFILE="job_${SLURM_JOB_ID}_${OMP_NUM_THREADS}cores.out"
 exec > "$OUTFILE" 2>&1   # redirect all stdout/stderr
 
 echo "Running with $OMP_NUM_THREADS threads"
-./part1 >> speedtest_1.dat
+./part1_$OMP_NUM_THREADS >> "$SPEEDFILE"
 
 CORRECTNESS_FILE="correctness_check_${OMP_NUM_THREADS}.txt"
 PROGRAM_OUTPUT="part1_${OMP_NUM_THREADS}_cores.dat"
@@ -32,4 +32,4 @@ if diff "$PROGRAM_OUTPUT" serial.dat > "$CORRECTNESS_FILE" 2>&1; then
 else
     echo "Output files differ! See $CORRECTNESS_FILE for details."
 fi
-rm part1 
+rm part1_$OMP_NUM_THREADS

@@ -58,8 +58,11 @@ void dxdt(double *du, double *dv, const double *u, const double *v) {
 }
 
 //should be straight forward to parallelise as there are no data dependencies
+//again similar to init, this could be collapsed but likely not worth it
+//also similar to init, i could condense this into one loop over the range of idx 
 void step(const double *du, const double *dv, double *u, double *v) {
   int idx;
+  #pragma omp parallel for default(none) shared(u,v,du,dv) private(idx,i,j)
   for (int i = 0; i < M; i++) {
     for (int j = 0; j < N; j++) { //for every grid point update u and v
       idx = i * N + j;

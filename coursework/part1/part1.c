@@ -9,7 +9,7 @@ that being said i should investigate whether collapsing both loops yields any ga
 (i suspect that it does not and only using one parallel for will be sufficient unless for very large core counts)*/
 void init(double *u, double *v) {
   int idx,i,j;
-  #pragma omp parallel for default(none) shared(u,v) private(idx,i,j)
+  #pragma omp parallel for default(none) shared(u,v,N,M,uhi,ulo,vhi,vlo) private(idx,i,j)
   for (i = 0; i < M; i++) {
     for (j = 0; j < N; j++) {
       idx = i * N + j;
@@ -62,7 +62,7 @@ void dxdt(double *du, double *dv, const double *u, const double *v) {
 //also similar to init, i could condense this into one loop over the range of idx 
 void step(const double *du, const double *dv, double *u, double *v) {
   int idx,i,j;
-  #pragma omp parallel for default(none) shared(u,v,du,dv) private(idx,i,j)
+  #pragma omp parallel for default(none) shared(u,v,du,dv,M,N,dt) private(idx,i,j)
   for (i = 0; i < M; i++) {
     for (j = 0; j < N; j++) { //for every grid point update u and v
       idx = i * N + j;
@@ -77,7 +77,7 @@ void step(const double *du, const double *dv, double *u, double *v) {
 double norm(const double *x) {
   double nrmx = 0.0;
   int idx,i,j;
-  #pragma omp parallel for default(none) shared(x) private(idx,i,j) reduction(+:nrmx)
+  #pragma omp parallel for default(none) shared(x,M,N) private(idx,i,j) reduction(+:nrmx)
   for (i = 0; i < M; i++) {
     for (j = 0; j < N; j++) {
       idx = i * N + j;

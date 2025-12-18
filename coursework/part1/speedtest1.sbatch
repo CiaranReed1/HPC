@@ -16,9 +16,15 @@ module load gcc
 
 # compile part.1c into part1
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
-gcc -fopenmp part1.c -o part1_$OMP_NUM_THREADS -lm
 OUTFILE="job_${SLURM_JOB_ID}_${OMP_NUM_THREADS}cores.out"
-exec > "$OUTFILE" 2>&1   # redirect all stdout/stderr
+exec > "$OUTFILE" 2>&1 
+
+
+gcc part1.c -lm -fopenmp -o part1_$OMP_NUM_THREADS 
+if [ $? -ne 0 ]; then
+    echo "Compilation failed!"
+    exit 1
+fi
 
 echo "Running with $OMP_NUM_THREADS threads"
 ./part1_$OMP_NUM_THREADS >> "$SPEEDFILE"

@@ -16,12 +16,15 @@ Development Notes:
 -Made script for strong scaling tests, made a makefile to clean up all files from these tests. 
 -Added initial parallel clauses to Init, step and norm. I will run the speed tests on these.
 -the source at this point saved as "part1_step1_omp.c"
--now i will attempt to collapse these into a single list and for loop 
+-now i will attempt to collapse these into a single list and for loop
+-starting with init i notice it may be slower, so i will run a test with just the changes to init to see
+ 
 
 Init:
 -Given that u and v are linear lists, it might be worth finding the max value of index and doing only 1 iteration over that. 
 -this is similar to doing a collapse but with potentially less overhad, this is worth testing for
 -for now, just implement with the basic for. 
+-On attempting to manually collapse I noticed each iteration requires a division, I have a hunch this will be expensive so i will run a test now 
 
 Step:
 -Very similar situation to Init with regards to collapse

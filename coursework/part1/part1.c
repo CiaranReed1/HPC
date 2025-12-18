@@ -72,9 +72,12 @@ void step(const double *du, const double *dv, double *u, double *v) {
   }
 }
 // calculate the norm of a 2D field stored in a 1D array
+// this can be parallellised using a reduction clause
+// this also might be worth condensing into a single loop over idx, similar to init and step
 double norm(const double *x) {
   double nrmx = 0.0;
   int idx;
+  #pragma omp parallel for default(none) shared(x) private(idx,i,j) reduction(+:nrmx)
   for (int i = 0; i < M; i++) {
     for (int j = 0; j < N; j++) {
       idx = i * N + j;

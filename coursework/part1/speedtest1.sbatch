@@ -14,15 +14,16 @@
 module purge
 module load gcc
 
-# compile part.1c into part1
+# set variables
 SRC_BASENAME=$(basename "$SRC" .c)
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 BIN="bin/part1_${OMP_NUM_THREADS}_${SRC_BASENAME}"
 OUTFILE="outputs/job_${SLURM_JOB_ID}_${OMP_NUM_THREADS}cores_${SRC_BASENAME}.out"
 
+#set std out of script output
 exec > "$OUTFILE" 2>&1 
 
-
+#compile
 gcc "src/$SRC" -lm -fopenmp -o bin/part1_${OMP_NUM_THREADS}_${SRC_BASENAME} 
 if [ $? -ne 0 ]; then
     echo "Compilation failed!"
@@ -38,14 +39,12 @@ for run in $(seq 1 8); do
 
     PROGRAM_OUTPUT="${OMP_NUM_THREADS}_cores_${SRC_BASENAME}.dat"
     CORRECTNESS_FILE="correctness_${OMP_NUM_THREADS}_${SRC_BASENAME}_run${run}.txt"
-
-    # run program (assumes it writes PROGRAM_OUTPUT internally
-    # OR writes to stdout; adapt if needed)
-        (
-    flock -x 200
-    "$BIN" >> "$SPEEDFILE"
+    #runs program
+    RUN_OUTPUT=$("$BIN")
+    (
+      flock -x 200
+      echo "$RUN_OUTPUT" >> "$SPEEDFILE"
     ) 200>>"$SPEEDFILE.lock"
-
     # ---- correctness check ----
     if diff "$PROGRAM_OUTPUT" data/serial.dat > "$CORRECTNESS_FILE" 2>&1; then
         echo "Run $run: output matches serial."

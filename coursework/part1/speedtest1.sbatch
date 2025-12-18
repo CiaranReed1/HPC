@@ -20,7 +20,7 @@ OUTFILE="job_${SLURM_JOB_ID}_${OMP_NUM_THREADS}cores.out"
 exec > "$OUTFILE" 2>&1 
 
 
-gcc part1.c -lm -fopenmp -o part1_$OMP_NUM_THREADS 
+gcc $SRC -lm -fopenmp -o part1_$OMP_NUM_THREADS 
 if [ $? -ne 0 ]; then
     echo "Compilation failed!"
     exit 1

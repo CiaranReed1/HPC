@@ -21,14 +21,14 @@ OUTFILE="outputs/job_${SLURM_JOB_ID}_${OMP_NUM_THREADS}cores_$(SRC_BASENAME).out
 exec > "$OUTFILE" 2>&1 
 
 
-gcc "$SRC" -lm -fopenmp -o part1_${OMP_NUM_THREADS}_${SRC_BASENAME} 
+gcc "$SRC" -lm -fopenmp -o bin/part1_${OMP_NUM_THREADS}_${SRC_BASENAME} 
 if [ $? -ne 0 ]; then
     echo "Compilation failed!"
     exit 1
 fi
 
 echo "Running with $OMP_NUM_THREADS threads"
-./part1_${OMP_NUM_THREADS}_${SRC_BASENAME} >> "$SPEEDFILE"
+bin/part1_${OMP_NUM_THREADS}_${SRC_BASENAME} >> "$SPEEDFILE"
 
 CORRECTNESS_FILE="correctness_check_${OMP_NUM_THREADS}_${SRC_BASENAME}.txt"
 PROGRAM_OUTPUT="${OMP_NUM_THREADS}_cores_${SRC_BASENAME}.dat"

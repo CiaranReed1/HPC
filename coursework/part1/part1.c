@@ -8,10 +8,10 @@
 that being said i should investigate whether collapsing both loops yields any gains 
 (i suspect that it does not and only using one parallel for will be sufficient unless for very large core counts)*/
 void init(double *u, double *v) {
-  int idx;
+  int idx,i,j;
   #pragma omp parallel for default(none) shared(u,v) private(idx,i,j)
-  for (int i = 0; i < M; i++) {
-    for (int j = 0; j < N; j++) {
+  for (i = 0; i < M; i++) {
+    for (j = 0; j < N; j++) {
       idx = i * N + j;
       u[idx] = ulo + (uhi - ulo) * 0.5 * (1.0 + tanh((i - M / 2) / 16.0)); //smooth gradient in vertical direction
       v[idx] = vlo + (vhi - vlo) * 0.5 * (1.0 + tanh((j - N / 2) / 16.0)); //smooth gradient in horizontal direction
@@ -61,10 +61,10 @@ void dxdt(double *du, double *dv, const double *u, const double *v) {
 //again similar to init, this could be collapsed but likely not worth it
 //also similar to init, i could condense this into one loop over the range of idx 
 void step(const double *du, const double *dv, double *u, double *v) {
-  int idx;
+  int idx,i,j;
   #pragma omp parallel for default(none) shared(u,v,du,dv) private(idx,i,j)
-  for (int i = 0; i < M; i++) {
-    for (int j = 0; j < N; j++) { //for every grid point update u and v
+  for (i = 0; i < M; i++) {
+    for (j = 0; j < N; j++) { //for every grid point update u and v
       idx = i * N + j;
       u[idx] += dt * du[idx];
       v[idx] += dt * dv[idx];
@@ -76,10 +76,10 @@ void step(const double *du, const double *dv, double *u, double *v) {
 // this also might be worth condensing into a single loop over idx, similar to init and step
 double norm(const double *x) {
   double nrmx = 0.0;
-  int idx;
+  int idx,i,j;
   #pragma omp parallel for default(none) shared(x) private(idx,i,j) reduction(+:nrmx)
-  for (int i = 0; i < M; i++) {
-    for (int j = 0; j < N; j++) {
+  for (i = 0; i < M; i++) {
+    for (j = 0; j < N; j++) {
       idx = i * N + j;
       nrmx += x[idx] * x[idx];
     }

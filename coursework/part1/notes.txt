@@ -18,6 +18,8 @@ Development Notes:
 -the source at this point saved as "part1_step1_omp.c"
 -now i will attempt to collapse these into a single list and for loop
 -starting with init i notice it may be slower, so i will run a test with just the changes to init to see
+-after logging back into hamilton i noticed it may be significantly slower for the simple omp additions, thus i will break the implementations down into their own source to test individually
+
  
 
 Init:

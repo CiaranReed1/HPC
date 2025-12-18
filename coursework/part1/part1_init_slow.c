@@ -70,12 +70,14 @@ void dxdt(double *du, double *dv, const double *u, const double *v) {
 /*unlike init, each step here does not require calculating i and j from idx 
 and so i believe this may yield performace gains*/
 void step(const double *du, const double *dv, double *u, double *v) {
-  int idx;
-  #pragma omp parallel for default(none) shared(u,v,du,dv,M,N,dt) private(idx)
-  for (idx = 0; idx < M*N; idx++) {
+  int idx,i,j;
+  for (i = 0; i < M; i++) {
+    for (j = 0; j < N; j++) {
+      idx = i * N + j;
      //for every grid point update u and v
       u[idx] += dt * du[idx];
       v[idx] += dt * dv[idx];
+    }
   }
 }
 // calculate the norm of a 2D field stored in a 1D array
@@ -84,7 +86,6 @@ void step(const double *du, const double *dv, double *u, double *v) {
 double norm(const double *x) {
   double nrmx = 0.0;
   int idx,i,j;
-  #pragma omp parallel for default(none) shared(x,M,N) private(idx,i,j) reduction(+:nrmx)
   for (i = 0; i < M; i++) {
     for (j = 0; j < N; j++) {
       idx = i * N + j;

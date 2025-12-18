@@ -1,7 +1,10 @@
 Note initial serial runtime : 802.515029
 
 Plan of action:
--parallelise using openmp
+-make script to test speed and append to a file, at the same time need to check for correctness
+-parallelise simple functions with omp. investigate difference between collapse and non collapse
+-run strong scaling tests
+-parallelise harder functions, check for correctness
 -perform strong scaling on hamilton up to 128 processes
 -do this for maybe 2 problem sizes and investigate if any difference
 -use python to create strong scaling plot 

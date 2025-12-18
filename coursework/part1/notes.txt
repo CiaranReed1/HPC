@@ -1,4 +1,4 @@
-Note initial serial runtime : 802.515029
+
 
 Plan of action:
 -make script to test speed and append to a file, at the same time need to check for correctness
@@ -9,3 +9,7 @@ Plan of action:
 -do this for maybe 2 problem sizes and investigate if any difference
 -use python to create strong scaling plot 
 -create report detailing the parallelisation strategy, maths for speedup, results  
+
+
+Development Notes:
+-Made initial speed and correctness tests, ran the serial speed test on hamilton and recorded the inital benchmark.

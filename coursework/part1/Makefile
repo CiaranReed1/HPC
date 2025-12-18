@@ -4,7 +4,7 @@
 BINS = serial part1 
 
 # SLURM output files
-SLURM_OUT = slurm-*.out *.err
+SLURM_OUT = *.out *.err
 
 # Other generated files
 DATA = part1_*_cores.dat correctness_check.txt
@@ -23,5 +23,5 @@ scaling:
 	@echo "cores,time_seconds" > speedtest_1.dat
 	@for c in $(CORES); do \
 		echo "  -> Submitting job with $$c cores"; \
-		sbatch -c $$c speedtest1.sbatch; \
+		sbatch -c $$c --export=NUM_CORES=$$c speedtest1.sbatch; \
 	done

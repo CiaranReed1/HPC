@@ -18,19 +18,20 @@ module load gcc
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 OUTFILE="job_${SLURM_JOB_ID}_${OMP_NUM_THREADS}cores.out"
 exec > "$OUTFILE" 2>&1 
+SRC_BASENAME=$(basename "$SRC" .c)
 
-
-gcc $SRC -lm -fopenmp -o part1_$OMP_NUM_THREADS 
+gcc "$SRC" -lm -fopenmp -o part1_${OMP_NUM_THREADS}_${SRC_BASENAME} 
 if [ $? -ne 0 ]; then
     echo "Compilation failed!"
     exit 1
 fi
 
 echo "Running with $OMP_NUM_THREADS threads"
-./part1_$OMP_NUM_THREADS >> "$SPEEDFILE"
+./part1_${OMP_NUM_THREADS}_${SRC_BASENAME} >> "$SPEEDFILE"
 
-CORRECTNESS_FILE="correctness_check_${OMP_NUM_THREADS}.txt"
-PROGRAM_OUTPUT="part1_${OMP_NUM_THREADS}_cores.dat"
+CORRECTNESS_FILE="correctness_check_${OMP_NUM_THREADS}_${SRC_BASENAME}.txt"
+PROGRAM_OUTPUT="${OMP_NUM_THREADS}_cores_${SRC_BASENAME}.dat"
+
 
 if diff "$PROGRAM_OUTPUT" serial.dat > "$CORRECTNESS_FILE" 2>&1; then
     echo "Output files match!"
@@ -38,4 +39,4 @@ if diff "$PROGRAM_OUTPUT" serial.dat > "$CORRECTNESS_FILE" 2>&1; then
 else
     echo "Output files differ! See $CORRECTNESS_FILE for details."
 fi
-rm part1_$OMP_NUM_THREADS
+rm part1_${OMP_NUM_THREADS}_${SRC_BASENAME}

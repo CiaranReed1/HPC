@@ -17,6 +17,9 @@ module load gcc
 # set variables
 SRC_BASENAME=$(basename "$SRC" .c)
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+export OMP_PLACES=cores
+export OMP_PROC_BIND=close
+
 BIN="bin/part1_${OMP_NUM_THREADS}_${SRC_BASENAME}"
 OUTFILE="outputs/job_${SLURM_JOB_ID}_${OMP_NUM_THREADS}cores_${SRC_BASENAME}.out"
 

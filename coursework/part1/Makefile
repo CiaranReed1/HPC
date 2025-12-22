@@ -17,7 +17,7 @@ clean:
 	@rm bin/*
 	@rm outputs/*
 
-CORES = 1 2 4 8 16 32 64 128
+CORES = 1 2 4 6 8 10 12 14 16 20 24 28 32 36 40 44 48 52 56 60 64
 SRC= ?= part1.c
 BASENAME := $(notdir $(SRC:.c=))
 SPEEDFILE := newData/$(BASENAME)_strong_scaling.dat

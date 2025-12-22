@@ -31,11 +31,20 @@ Init:
 -for now, just implement with the basic for. 
 -On attempting to manually collapse I noticed each iteration requires a division, I have a hunch this will be expensive so i will run a test now 
 
-Step
+Step:
 -Unlike init, step does not use i and j in the loop. Therefore calculating  idx using i and j is just extra work. 
 -I suspect that by collapsing the for loop this will get gains, i will test for basic implementation, collapsed and manual collapsed
+- I actually found this parallelising step is detrimental, likely because step is memory bandwidth bound and not compute bound.
+-Each iteration does 2 loads (du, dv), 2 stores (u,v)  2 multiplications and 2 aditions. the compute to memory ratio is very low
+-we may saturate memory bandwidth on a single core so using multiple causes them to compete for the same result.
+-also adjacent elements of u,v, du,dv live on the same cache line, so when multiple threads are updating different indicies the cache
+lines bounce between cores. this hurts performance. 
 
-
+DXDT:
+-initial thoughts are that checking for boundary points on every iteration is expensive on the long run and it might be more prudent to split this
+-this still has a lot of loads and stores per iteration, but stim, f and g might add more non linearity and more complex terms to improve ratio
+-Trialing 3 different versions of dxdt. Default - separated interior and exterior points into seperate loops, with only the interior points being parallelised.
+Single - the boundary points are computed using omp single nowait clauses. Collapse - the interior points are computed via collapsed for loop.
 
 Norm:
 -Easily parallelised using a for reduction clause, but again like step and init it could be potentially be improved by making a 1d array

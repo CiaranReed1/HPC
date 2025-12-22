@@ -21,8 +21,8 @@ Development Notes:
 -after logging back into hamilton i noticed it may be significantly slower for the simple omp additions, 
 -thus i will break the implementations down into their own source to test individually, using default, manual and collapse
 -Now i will change the slurm script to run 5 of each simulation and record all the speeds. to help me find an mean
-
-
+-Ok, now time to review notes from the experiments, with init -> collapse, step -> none, norm -> default, dxdt -> single and collapse  
+-Now i will re run the tests for dxdt using more core ranges this time. I will also run the part1.c version with the best of each function implemented
  
 
 Init:
@@ -30,6 +30,8 @@ Init:
 -this is similar to doing a collapse but with potentially less overhad, this is worth testing for
 -for now, just implement with the basic for. 
 -On attempting to manually collapse I noticed each iteration requires a division, I have a hunch this will be expensive so i will run a test now 
+-Doing the collapse was actually worthwile, with the built in collapse giving the best results
+
 
 Step:
 -Unlike init, step does not use i and j in the loop. Therefore calculating  idx using i and j is just extra work. 
@@ -39,13 +41,24 @@ Step:
 -we may saturate memory bandwidth on a single core so using multiple causes them to compete for the same result.
 -also adjacent elements of u,v, du,dv live on the same cache line, so when multiple threads are updating different indicies the cache
 lines bounce between cores. this hurts performance. 
+-all implementations hurt the performance of the program. apart from for very small number of cores where there was a bit of speedup
+
+
 
 DXDT:
 -initial thoughts are that checking for boundary points on every iteration is expensive on the long run and it might be more prudent to split this
 -this still has a lot of loads and stores per iteration, but stim, f and g might add more non linearity and more complex terms to improve ratio
 -Trialing 3 different versions of dxdt. Default - separated interior and exterior points into seperate loops, with only the interior points being parallelised.
 Single - the boundary points are computed using omp single nowait clauses. Collapse - the interior points are computed via collapsed for loop.
+-I noticed speedups for both single and collapse, so it might be worth implementing both. I also noticed that the single version has a strange looking curve that is worth investigating further with a greater range of cores
+
+
 
 Norm:
 -Easily parallelised using a for reduction clause, but again like step and init it could be potentially be improved by making a 1d array
- 
+-Actually ran best when using the default case. with the "manual" approach resulting in negative speedup. 
+-I noticed significant speedups for the default case and lower speedup when using collapse. 
+Each iteration is one load, one multiply, and one add into a reduction variable. this is low arithmatic and memory bound
+-this means that if we have big chunks with contiguous memory access then the reduction can be done efficiently.
+If we use collapse then the chunks become smaller on each thread with more frequent partial reductions, meaning more overhead.
+also threads may jump between rows, meaning less contiguous access per thread. So default is the best option  

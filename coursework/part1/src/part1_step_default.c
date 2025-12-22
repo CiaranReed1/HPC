@@ -76,7 +76,7 @@ void step(const double *du, const double *dv, double *u, double *v) {
   int idx,i,j;
   #pragma omp parallel for default(none) shared(u,v,du,dv,M,N,dt) private(idx,i,j)
   for (i = 0; i < M; i++) {
-    for(j=0l;j<N;j++){
+    for(j=0;j<N;j++){
       idx = i * N + j;
      //for every grid point update u and v
       u[idx] += dt * du[idx];

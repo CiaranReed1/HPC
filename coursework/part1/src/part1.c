@@ -127,7 +127,7 @@ for (i = 0; i < M; i++) {
 double norm(const double *x) {
 double nrmx = 0.0;
 int idx,i,j;
-#pragma omp for shared(x,M,N) private(idx,i,j) reduction(+:nrmx)
+#pragma omp for private(idx,i,j) reduction(+:nrmx)
 for (i = 0; i < M; i++) {
   for (j = 0; j < N; j++) {
     idx = i * N + j;
@@ -161,7 +161,7 @@ if (!u || !v || !du || !dv) {
 init(u, v);
 // time-loop
 int k;
-#pragma omp parallel default(none) shared(T,dt,m,k,u,v,du,dv,stats,t,nrmu,nrmv,writeInd)
+#pragma omp parallel default(none) shared(M,N,T,dt,m,k,u,v,du,dv,stats,t,nrmu,nrmv,writeInd)
 {
 for (k = 0; k < T; k++) {
     // track the time

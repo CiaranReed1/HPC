@@ -23,7 +23,6 @@ void init(double *u, double *v) {
       v[idx] = vlo + (vhi - vlo) * 0.5 * (1.0 + tanh((j - N / 2) / 16.0)); //smooth gradient in horizontal direction
     }
   }
-  
 }
 
 void dxdt(double *du, double *dv, const double *u, const double *v) {

@@ -14,8 +14,8 @@ DATA = part1_*_cores.dat correctness_check_*.txt
 clean:
 	@echo "Cleaning binaries, SLURM outputs, and data files..."
 	@rm -f $(BINS) $(SLURM_OUT) $(DATA)
-	@rm bin/*
 	@rm outputs/*
+	@rm bin/*	
 
 CORES = 1 2 4 6 8 10 12 14 16 20 24 28 32 36 40 44 48 52 56 60 64
 SRC= ?= part1.c

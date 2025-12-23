@@ -127,7 +127,7 @@ for (i = 0; i < M; i++) {
 double norm(const double *x) {
 double nrmx = 0.0;
 int idx,i,j;
-#pragma omp for private(idx,i,j) reduction(+:nrmx)
+#pragma omp for default(none) private(idx,i,j) reduction(+:nrmx)
 for (i = 0; i < M; i++) {
   for (j = 0; j < N; j++) {
     idx = i * N + j;

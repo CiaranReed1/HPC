@@ -160,15 +160,17 @@ if (!u || !v || !du || !dv) {
 // initialize the state
 init(u, v);
 // time-loop
-#pragma omp parallel default(none) shared(u,v,du,dv,stats,t,nrmu,nrmv,writeInd)
+int k;
+#pragma omp parallel default(none) shared(T,dt,m,k,u,v,du,dv,stats,t,nrmu,nrmv,writeInd)
 {
-for (int k = 0; k < T; k++) {
+for (k = 0; k < T; k++) {
     // track the time
     t = dt * k;
     // evaluate the PDE
     dxdt(du, dv, u, v);
     // update the state variables u,v
-    #pragma omp single{
+    #pragma omp single
+    {
       step(du, dv, u, v);
     }
     if (k % m == 0) { // every m time steps, store norms

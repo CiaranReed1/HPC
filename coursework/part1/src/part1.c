@@ -124,17 +124,17 @@ for (i = 0; i < M; i++) {
 // calculate the norm of a 2D field stored in a 1D array
 // this can be parallellised using a reduction clause
 // this also might be worth condensing into a single loop over idx, similar to init and step
-double norm(const double *x) {
-double nrmx = 0.0;
+double norm(const double *x,double *nrmx) {
+*nrmx = 0.0;
 int idx,i,j;
-#pragma omp for default(none) private(idx,i,j) reduction(+:nrmx)
+#pragma omp for private(idx,i,j) reduction(+:*nrmx)
 for (i = 0; i < M; i++) {
   for (j = 0; j < N; j++) {
     idx = i * N + j;
-    nrmx += x[idx] * x[idx];
+    *nrmx += x[idx] * x[idx];
   }
 }
-return nrmx;
+return *nrmx;
 }
 
 
@@ -161,6 +161,7 @@ if (!u || !v || !du || !dv) {
 init(u, v);
 // time-loop
 int k;
+double nrmx;
 #pragma omp parallel default(none) shared(M,N,T,dt,m,k,u,v,du,dv,stats,t,nrmu,nrmv,writeInd)
 {
 for (k = 0; k < T; k++) {
@@ -176,8 +177,8 @@ for (k = 0; k < T; k++) {
     if (k % m == 0) { // every m time steps, store norms
       writeInd = k / m;
       // calculate the norms
-      nrmu = norm(u);
-      nrmv = norm(v);
+      nrmu = norm(u,&nrmx);
+      nrmv = norm(v,&nrmx);
       stats[writeInd][0] = t;
       stats[writeInd][1] = nrmu;
       stats[writeInd][2] = nrmv;

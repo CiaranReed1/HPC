@@ -23,7 +23,10 @@ Development Notes:
 -Now i will change the slurm script to run 5 of each simulation and record all the speeds. to help me find an mean
 -Ok, now time to review notes from the experiments, with init -> collapse, step -> none, norm -> default, dxdt -> single and collapse  
 -Now i will re run the tests for dxdt using more core ranges this time. I will also run the part1.c version with the best of each function implemented
- 
+- It is worth noting that whilst i used the "close" setting on omp, this meant that all threads occupied the same CPU socket.
+-so they were competing for the same memory bandwidth. If i had used spread then the cores would spread across the two sockets and 
+they would utilise higher memory bandwidth. This might have yielded speedups. I will also run tests on a larger problem size
+Tripling the lengths will increase the problem size by x9
 
 Init:
 -Given that u and v are linear lists, it might be worth finding the max value of index and doing only 1 iteration over that. 

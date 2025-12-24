@@ -15,7 +15,7 @@ However this requires doing two divisions every iteration so this may be detrime
 */
 void init(double *u, double *v) {
   int idx,i,j;
-  #pragma omp parallel for default(none) shared(u,v) private(idx,i,j) collapse(2)
+  #pragma omp parallel for default(none) shared(u,v,ulo,uhi,vlo,vhi,M,N) private(idx,i,j) collapse(2)
   for (i = 0;i<M;i++){
     for (j = 0;j<N;j++){
       idx = i * N + j;
@@ -123,7 +123,7 @@ void step(const double *du, const double *dv, double *u, double *v) {
 double norm(const double *x) {
   double nrmx = 0.0;
   int idx,i,j;
-  #pragma omp parallel for default(none) shared(x) private(i,j,idx) reduction(+:nrmx)
+  #pragma omp parallel for default(none) shared(x,N,M) private(i,j,idx) reduction(+:nrmx)
   for (i = 0; i < M; i++) {
     for (j = 0; j < N; j++) {
       idx = i * N + j;
@@ -156,7 +156,7 @@ int main(int argc, char **argv) {
   // initialize the state
   init(u, v);
   // time-loop
-  #pragma omp parallel default(none) shared(u,v,du,dv,stats,k,t,nrmu,nrmv,writeInd)
+  #pragma omp parallel default(none) shared(u,v,du,dv,stats,k,t,nrmu,nrmv,writeInd,M,N,T,m,dt,R,d,DD)
   {
     for (k = 0; k < T; k++) {
       // track the time
@@ -186,7 +186,7 @@ int main(int argc, char **argv) {
   }
   // write norms output
   char filename[30];
-  sprintf(filename, "%d_cores_part1_separate.dat", omp_get_max_threads());
+  sprintf(filename, "%d_cores_part1_jointregion.dat", omp_get_max_threads());
   FILE *fptr = fopen(filename, "w");
   fprintf(fptr, "#t\t\tnrmu\t\tnrmv\n");
   for (int k = 0; k < (T / m); k++) {

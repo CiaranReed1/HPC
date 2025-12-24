@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
   double start,end;
   start = omp_get_wtime();
   double t = 0.0, nrmu, nrmv;
-  int writeInd = 0;
+  int writeInd = 0,k,i,j,idx;
   double stats[T / m][3];
 
   // Allocate memory for 1D arrays representing 2D grids
@@ -158,7 +158,7 @@ int main(int argc, char **argv) {
   // time-loop
   #pragma omp parallel default(none) shared(u,v,du,dv,stats,k,T,dt,t,m,nrmu,nrmv,writeInd,N,M,DD,R,d)
   {
-    for (int k = 0; k < T; k++) {
+    for (k = 0; k < T; k++) {
       // track the time
       t = dt * k;
       // evaluate the PDE
@@ -171,9 +171,9 @@ int main(int argc, char **argv) {
         nrmu = 0.0;
         nrmv = 0.0;
         #pragma omp for reduction(+:nrmu,nrmv) private(i,j,idx)
-        for (int i = 0; i < M ; i++){
-          for (int j = 0; j < N ; j++){
-            int idx = i * N + j;
+        for (i = 0; i < M ; i++){
+          for (j = 0; j < N ; j++){
+            idx = i * N + j;
             nrmu += u[idx] * u[idx];
             nrmv += v[idx] * v[idx];
           }

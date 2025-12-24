@@ -15,23 +15,27 @@ variants = {}
 variants["init"]= ["default","collapse","manual"] # no default
 variants["step"]= ["default","collapse","manual"]
 variants["norm"]= ["default","collapse","manual"] #no manual
-variants["dxdt"]= ["default","collapse","single","combo"] # none yet
+variants["dxdt"]= ["default","collapse","single","combo","pllboundary","pllboundary_combo"] # none yet
 variants[""] = [""]
-colors = ["red","green","blue","purple"]
+colors = ["red","green","blue","purple","orange","brown"]
 for func in funcs:
-    fig, axs = plt.subplots(1,2,figsize =(8,6))
-    axs[0].set_xlabel("Number of cores")
-    axs[0].set_ylabel("Speedup")
-    axs[1].set_xlabel("Number of cores")
-    axs[1].set_ylabel("Efficiency")
-    if (func != ""):
-        axs[0].set_title(f"Strong Scaling when parallelising {func}")
-        axs[1].set_title(f"Efficiency when parallelising {func}")
-    else:
-        axs[0].set_title("Strong Scaling Speedup for overall paralellised program")
-        axs[1].set_title("Strong scaling Efficiency for overall paralellised program")
+    fig, ax = plt.subplots(1,1,figsize =(6,4))
+    ax.set_xlabel("Number of cores")
+    ax.set_ylabel("Speedup")
+    #axs[1].set_xlabel("Number of cores")
+    #axs[1].set_ylabel("Efficiency")
+    # if (func != ""):
+    #     ax.set_title(f"Strong Scaling when parallelising {func}")
+    #     #axs[1].set_title(f"Efficiency when parallelising {func}")
+    # else:
+    #     ax.set_title("Strong Scaling Speedup for overall paralellised program")
+    #     #axs[1].set_title("Strong scaling Efficiency for overall paralellised program")
     data  = {}
     for i,variant in enumerate(variants[func]):
+        if (variant == "default"):
+            label = "trivial"
+        else:
+            label = variant
         if (func != ""):
             filename = f"newData/part1_{func}_{variant}_strong_scaling.dat"
         else:
@@ -63,13 +67,13 @@ for func in funcs:
         xs = np.arange(1, max(mean_data["cores"])+1,0.1)
         params,covar = optimize.curve_fit(speedup,mean_data["cores"],mean_data["speedup"],p0=[0.1],sigma =mean_data["speedup_error"],absolute_sigma=True,bounds=(0,1))
         f = params[0]
-        axs[0].plot(xs,speedup(xs,f), color=colors[i])
-        axs[0].errorbar(mean_data["cores"],mean_data["speedup"],yerr=mean_data["speedup_error"],marker='',capsize=3,label = variant+f" (f={f:.2f})",color=colors[i],linestyle='')
-        axs[1].plot(xs,efficiency(xs,f), color=colors[i])
-        axs[1].errorbar(mean_data["cores"],mean_data["efficiency"],yerr=mean_data["efficiency_error"],marker='',capsize=3,label = variant+f" (f={f:.2f})",color=colors[i],linestyle='')
-    axs[0].legend()
-    axs[1].legend()
+        ax.plot(xs,speedup(xs,f), color=colors[i])
+        ax.errorbar(mean_data["cores"],mean_data["speedup"],yerr=mean_data["speedup_error"],marker='',capsize=3,label = label+f" (f={f:.2f})",color=colors[i],linestyle='')
+        #axs[1].plot(xs,efficiency(xs,f), color=colors[i])
+        #axs[1].errorbar(mean_data["cores"],mean_data["efficiency"],yerr=mean_data["efficiency_error"],marker='',capsize=3,label = label+f" (f={f:.2f})",color=colors[i],linestyle='')
+    ax.legend()
+    #axs[1].legend()
     fig.tight_layout()
     plt.savefig(f"plots/part1_{func}_strong_scaling.png")
-    plt.show()
+    
     

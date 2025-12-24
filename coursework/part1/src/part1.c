@@ -4,16 +4,10 @@
 #include <stdlib.h> // needed for malloc and free
 #include <omp.h>
 
-/* this has no data dependencies and is such trivially parallellised. 
-that being said i should investigate whether collapsing both loops yields any gains 
-(i suspect that it does not and only using one parallel for will be sufficient unless for very large core counts)*/
 
-/*After inital testing of a simple implementation, I will now manually collapse the nested loops into a single loop over the range of idx
-max value of index when (i = M-1, j = N-1): idx = (M-1)*N + N-1 = MN - N + N -1 = MN -1
-so the for loop will run from 0 to MN -1 inclusive
-However this requires doing two divisions every iteration so this may be detrimental
-*/
 void init(double *u, double *v) {
+  /* this has no data dependencies and is such trivially parallellised, 
+testing reveals that collapsing both loops yields minor performance gains*/
   int idx,i,j;
   #pragma omp parallel for default(none) shared(u,v,N,M,uhi,ulo,vhi,vlo) private(idx,i,j) collapse(2)
   for (i = 0;i<M;i++){
@@ -25,6 +19,10 @@ void init(double *u, double *v) {
   }
 }
 void dxdt(double *du, double *dv, const double *u, const double *v) {
+  /*Calculation of boundary points can be done independently of the interior points, 
+  therefore by splitting the evaluation of the function into interior and boundary sections, 
+  one can utilise a nowait clause to overlap calculation, 
+  the implicit barrier at the end of interior points forces syncrhonisation before continuing*/
   double lapu, lapv, _u, _v;
   int up, down, left, right, idx,i,j; // indicies of neighboring grid positions
   #pragma omp parallel default(none) shared(u,v,du,dv,M,N,DD,R,d) private(idx,i,j,up,down,left,right,lapu,lapv,_u,_v)
@@ -58,7 +56,7 @@ void dxdt(double *du, double *dv, const double *u, const double *v) {
       dv[idx] = d * DD * lapv + g(_u, _v);
    }
     #pragma omp for nowait
-    for (j = 0; j < N; j++) { //bottom and top edges
+    for (j = 0; j < N; j++) { //bottom and top edges (incuding corners)
       //start with bottom edge : i = 0
       up = N + j;
       down = j;
@@ -85,7 +83,7 @@ void dxdt(double *du, double *dv, const double *u, const double *v) {
       du[idx] = DD * lapu + f(_u, _v) + R * stim(i, j); 
       dv[idx] = d * DD * lapv + g(_u, _v);
     }
-    #pragma omp for  //interior points
+    #pragma omp for  //interior points, testing revealed that collapsing loops here had negative performance impacts
     for (i = 1; i < M-1; i++) {
       for (j = 1; j < N-1; j++) {
         idx = i * N + j;
@@ -103,13 +101,11 @@ void dxdt(double *du, double *dv, const double *u, const double *v) {
     }
   }
   }
-//should be straight forward to parallelise as there are no data dependencies
-//again similar to init, this could be collapsed but likely not worth it
-//also similar to init, i could condense this into one loop over the range of idx 
 
-/*unlike init, each step here does not require calculating i and j from idx 
-and so i believe this may yield performace gains*/
+
 void step(const double *du, const double *dv, double *u, double *v) {
+  /*Testing of several different parallelisation strategies all had negative performance impacts
+  thus the final program is just executed serially, justification is available within the report*/
   int idx,i,j;
   for (i = 0; i < M; i++) {
     for (j = 0; j < N; j++) {
@@ -120,10 +116,10 @@ void step(const double *du, const double *dv, double *u, double *v) {
     }
   }
 }
-// calculate the norm of a 2D field stored in a 1D array
-// this can be parallellised using a reduction clause
-// this also might be worth condensing into a single loop over idx, similar to init and step
+
 double norm(const double *x) {
+  /*this is a classis example of a reduction.
+   Testing revealed that collapsing the inner loop had worse performance compared to a trivial parallelisation */
   double nrmx = 0.0;
   int idx,i,j;
   #pragma omp parallel for default(none) shared(x,M,N) private(idx,i,j) reduction(+:nrmx)

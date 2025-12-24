@@ -29,67 +29,63 @@ void dxdt(double *du, double *dv, const double *u, const double *v) {
   int up, down, left, right, idx,i,j; // indicies of neighboring grid positions
   #pragma omp parallel default(none) shared(u,v,du,dv,M,N,DD,R,d) private(idx,i,j,up,down,left,right,lapu,lapv,_u,_v)
   {
-    #pragma omp single nowait//left and right edges (excluding corners)
-    {
-      for (i = 1; i < M-1; i++) { 
-        //start with left edge : j = 0
-        up = (i + 1) * N;
-        down = (i - 1) * N;
-        left = i * N;
-        right = i * N + 1;
-        idx = i * N;
-        _u = u[idx]; 
-        _v = v[idx];
-        lapu = u[up] + u[down] + u[left] + u[right] + -4.0 * _u; 
-        lapv = v[up] + v[down] + v[left] + v[right] + -4.0 * _v;
-        du[idx] = DD * lapu + f(_u, _v) + R * stim(i, 0); 
-        dv[idx] = d * DD * lapv + g(_u, _v);
-        //now right edge: j = N-1
-        j = N-1;
-        up = (i + 1) * N + (j);
-        down = (i - 1) * N + (j);
-        left = i * N + (N - 2);
-        right = i * N + (j);
-        idx = i * N + (j);
-        _u = u[idx];
-        _v = v[idx];
-        lapu = u[up] + u[down] + u[left] + u[right] + -4.0 * _u; 
-        lapv = v[up] + v[down] + v[left] + v[right] + -4.0 * _v;
-        du[idx] = DD * lapu + f(_u, _v) + R * stim(i, j); 
-        dv[idx] = d * DD * lapv + g(_u, _v);
-      }
+    #pragma omp for nowait 
+    for (i = 1; i < M-1; i++) { //left and right edges (excluding corners)
+      //start with left edge : j = 0
+      up = (i + 1) * N;
+      down = (i - 1) * N;
+      left = i * N;
+      right = i * N + 1;
+      idx = i * N;
+      _u = u[idx]; 
+      _v = v[idx];
+      lapu = u[up] + u[down] + u[left] + u[right] + -4.0 * _u; 
+      lapv = v[up] + v[down] + v[left] + v[right] + -4.0 * _v;
+      du[idx] = DD * lapu + f(_u, _v) + R * stim(i, 0); 
+      dv[idx] = d * DD * lapv + g(_u, _v);
+      //now right edge: j = N-1
+      j = N-1;
+      up = (i + 1) * N + (j);
+      down = (i - 1) * N + (j);
+      left = i * N + (N - 2);
+      right = i * N + (j);
+      idx = i * N + (j);
+      _u = u[idx];
+      _v = v[idx];
+      lapu = u[up] + u[down] + u[left] + u[right] + -4.0 * _u; 
+      lapv = v[up] + v[down] + v[left] + v[right] + -4.0 * _v;
+      du[idx] = DD * lapu + f(_u, _v) + R * stim(i, j); 
+      dv[idx] = d * DD * lapv + g(_u, _v);
+   }
+    #pragma omp for nowait
+    for (j = 0; j < N; j++) { //bottom and top edges
+      //start with bottom edge : i = 0
+      up = N + j;
+      down = j;
+      left = j == 0 ? j : j - 1;
+      right = j == N - 1 ? j : j + 1;
+      //here idx = j
+      _u = u[j]; 
+      _v = v[j];
+      lapu = u[up] + u[down] + u[left] + u[right] + -4.0 * _u; 
+      lapv = v[up] + v[down] + v[left] + v[right] + -4.0 * _v;
+      du[j] = DD * lapu + f(_u, _v) + R * stim(0, j); 
+      dv[j] = d * DD * lapv + g(_u, _v);
+      //now top edge : i = M-1
+      i = M-1;
+      up = (i) * N + j;
+      down = (M - 2) * N + j;
+      left = (i) * N + (j == 0 ? j : j - 1);
+      right = (i) * N + (j == N - 1 ? j : j + 1);
+      idx = (i) * N + j;
+      _u = u[idx]; 
+      _v = v[idx];
+      lapu = u[up] + u[down] + u[left] + u[right] + -4.0 * _u; 
+      lapv = v[up] + v[down] + v[left] + v[right] + -4.0 * _v;
+      du[idx] = DD * lapu + f(_u, _v) + R * stim(i, j); 
+      dv[idx] = d * DD * lapv + g(_u, _v);
     }
-    #pragma omp single nowait //bottom and top edges
-    {
-      for (j = 0; j < N; j++) { 
-        //start with bottom edge : i = 0
-        up = N + j;
-        down = j;
-        left = j == 0 ? j : j - 1;
-        right = j == N - 1 ? j : j + 1;
-        //here idx = j
-        _u = u[j]; 
-        _v = v[j];
-        lapu = u[up] + u[down] + u[left] + u[right] + -4.0 * _u; 
-        lapv = v[up] + v[down] + v[left] + v[right] + -4.0 * _v;
-        du[j] = DD * lapu + f(_u, _v) + R * stim(0, j); 
-        dv[j] = d * DD * lapv + g(_u, _v);
-        //now top edge : i = M-1
-        i = M-1;
-        up = (i) * N + j;
-        down = (M - 2) * N + j;
-        left = (i) * N + (j == 0 ? j : j - 1);
-        right = (i) * N + (j == N - 1 ? j : j + 1);
-        idx = (i) * N + j;
-        _u = u[idx]; 
-        _v = v[idx];
-        lapu = u[up] + u[down] + u[left] + u[right] + -4.0 * _u; 
-        lapv = v[up] + v[down] + v[left] + v[right] + -4.0 * _v;
-        du[idx] = DD * lapu + f(_u, _v) + R * stim(i, j); 
-        dv[idx] = d * DD * lapv + g(_u, _v);
-      }
-    }
-    #pragma omp for collapse(2) //interior points
+    #pragma omp for  //interior points
     for (i = 1; i < M-1; i++) {
       for (j = 1; j < N-1; j++) {
         idx = i * N + j;
@@ -182,7 +178,7 @@ int main(int argc, char **argv) {
   }
   // write norms output
   char filename[30];
-  sprintf(filename, "%d_cores_part1_separate.dat", omp_get_max_threads());
+  sprintf(filename, "%d_cores_part1.dat", omp_get_max_threads());
   FILE *fptr = fopen(filename, "w");
   fprintf(fptr, "#t\t\tnrmu\t\tnrmv\n");
   for (int k = 0; k < (T / m); k++) {

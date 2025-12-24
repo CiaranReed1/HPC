@@ -1,0 +1,67 @@
+
+
+Plan of action:
+-make script to test speed and append to a file, at the same time need to check for correctness
+-parallelise simple functions with omp. investigate difference between collapse and non collapse
+-run strong scaling tests
+-parallelise harder functions, check for correctness
+-perform strong scaling on hamilton up to 128 processes
+-do this for maybe 2 problem sizes and investigate if any difference
+-use python to create strong scaling plot 
+-create report detailing the parallelisation strategy, maths for speedup, results  
+
+
+Development Notes:
+-Made initial speed and correctness tests, ran the serial speed test on hamilton and recorded the inital benchmark.
+-Made script for strong scaling tests, made a makefile to clean up all files from these tests. 
+-Added initial parallel clauses to Init, step and norm. I will run the speed tests on these.
+-the source at this point saved as "part1_first_attempt.c" with the speed test saved as simple_omp_speed.dat
+-now i will attempt to collapse these into a single list and for loop
+-starting with init i notice it may be slower, so i will run a test with just the changes to init to see
+-after logging back into hamilton i noticed it may be significantly slower for the simple omp additions, 
+-thus i will break the implementations down into their own source to test individually, using default, manual and collapse
+-Now i will change the slurm script to run 5 of each simulation and record all the speeds. to help me find an mean
+-Ok, now time to review notes from the experiments, with init -> collapse, step -> none, norm -> default, dxdt -> single and collapse  
+-Now i will re run the tests for dxdt using more core ranges this time. I will also run the part1.c version with the best of each function implemented
+- It is worth noting that whilst i used the "close" setting on omp, this meant that all threads occupied the same CPU socket.
+-so they were competing for the same memory bandwidth. If i had used spread then the cores would spread across the two sockets and 
+they would utilise higher memory bandwidth. This might have yielded speedups. I will also run tests on a larger problem size
+Tripling the lengths will increase the problem size by x9
+
+Init:
+-Given that u and v are linear lists, it might be worth finding the max value of index and doing only 1 iteration over that. 
+-this is similar to doing a collapse but with potentially less overhad, this is worth testing for
+-for now, just implement with the basic for. 
+-On attempting to manually collapse I noticed each iteration requires a division, I have a hunch this will be expensive so i will run a test now 
+-Doing the collapse was actually worthwile, with the built in collapse giving the best results
+
+
+Step:
+-Unlike init, step does not use i and j in the loop. Therefore calculating  idx using i and j is just extra work. 
+-I suspect that by collapsing the for loop this will get gains, i will test for basic implementation, collapsed and manual collapsed
+- I actually found this parallelising step is detrimental, likely because step is memory bandwidth bound and not compute bound.
+-Each iteration does 2 loads (du, dv), 2 stores (u,v)  2 multiplications and 2 aditions. the compute to memory ratio is very low
+-we may saturate memory bandwidth on a single core so using multiple causes them to compete for the same result.
+-also adjacent elements of u,v, du,dv live on the same cache line, so when multiple threads are updating different indicies the cache
+lines bounce between cores. this hurts performance. 
+-all implementations hurt the performance of the program. apart from for very small number of cores where there was a bit of speedup
+
+
+
+DXDT:
+-initial thoughts are that checking for boundary points on every iteration is expensive on the long run and it might be more prudent to split this
+-this still has a lot of loads and stores per iteration, but stim, f and g might add more non linearity and more complex terms to improve ratio
+-Trialing 3 different versions of dxdt. Default - separated interior and exterior points into seperate loops, with only the interior points being parallelised.
+Single - the boundary points are computed using omp single nowait clauses. Collapse - the interior points are computed via collapsed for loop.
+-I noticed speedups for both single and collapse, so it might be worth implementing both. I also noticed that the single version has a strange looking curve that is worth investigating further with a greater range of cores
+
+
+
+Norm:
+-Easily parallelised using a for reduction clause, but again like step and init it could be potentially be improved by making a 1d array
+-Actually ran best when using the default case. with the "manual" approach resulting in negative speedup. 
+-I noticed significant speedups for the default case and lower speedup when using collapse. 
+Each iteration is one load, one multiply, and one add into a reduction variable. this is low arithmatic and memory bound
+-this means that if we have big chunks with contiguous memory access then the reduction can be done efficiently.
+If we use collapse then the chunks become smaller on each thread with more frequent partial reductions, meaning more overhead.
+also threads may jump between rows, meaning less contiguous access per thread. So default is the best option  

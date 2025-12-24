@@ -1,0 +1,4 @@
+Running part1_jointregion.c with 4 threads
+Binary: bin/part1_4_part1_jointregion
+Appending results to: newData/part1_jointregion_strong_scaling.dat
+Run 1 / 8

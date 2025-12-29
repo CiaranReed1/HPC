@@ -15,4 +15,4 @@ exec > "$OUTFILE" 2>&1
 echo "Running serial binary $SRC_BASENAME with problem size $PROBLEM_SIZE"
 
 # run the program
-"$BIN" "$PROBLEM_SIZE" "$RUNS" >> "$SPEEDFILE"
+"$BIN" "$PROBLEM_SIZE" 

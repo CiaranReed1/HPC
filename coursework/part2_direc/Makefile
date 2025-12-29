@@ -99,7 +99,7 @@ serial: serial-compile
 	@for n in $(RANKS); do \
 		echo "  -> Problem Size: $$n"; \
 		sbatch \
-			--export=ALL,PROBLEM_SIZE=$$n,BIN=$(SERIAL_BIN),RUNS=$(RUNS),SPEEDFILE=$(SPEEDFILE) \
+			--export=ALL,PROBLEM_SIZE=$$n,BIN=$(SERIAL_BIN) \
 			serial.sbatch; \
 	done
 

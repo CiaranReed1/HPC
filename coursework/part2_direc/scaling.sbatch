@@ -5,7 +5,7 @@
 #SBATCH -e /dev/null
 #SBATCH --output=/dev/null
 #SBATCH --cpus-per-task=1
-#SBATCH --time=4:0:0	# time limit for job (format:  days-hours:minutes:seconds)
+#SBATCH --time=2-0:00:00	# time limit for job (format:  days-hours:minutes:seconds)
 # Specify the tasks to run:
 # Run in the 'shared' queue (job may share node with other jobs)
 #SBATCH -p shared

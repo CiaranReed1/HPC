@@ -3,7 +3,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=100G
 #SBATCH -p shared
-#SBATCH --time=24:00:00
+#SBATCH --time=2-0:00:00
 
 SRC_BASENAME=$(basename "$BIN")
 SRC_BASENAME="${SRC_BASENAME%.*}"

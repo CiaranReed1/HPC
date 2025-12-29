@@ -36,12 +36,19 @@ void init(double *u, double *v) {
       idx = i * sub_N + j;
       //for calculatoin of u, the i needs to be scaled to the global index
       int i_scaled = global_i_first + (i - i_first);
+      
+      if (i == i_first && j < 5) {
+          printf("Rank %d: i=%d, j=%d, i_scaled=%d, u=%f, v=%f\n",
+                rank, i, j, i_scaled, u[idx], v[idx]);
+          fflush(stdout);
+      }
+     
       u[idx] = ulo + (uhi - ulo) * 0.5 * (1.0 + tanh((i_scaled - 0.5 * M) / 16.0));
       v[idx] = vlo + (vhi - vlo) * 0.5 * (1.0 + tanh((j - 0.5 * N) / 16.0));
     }
   }
   // now do a halo exchange to fill ghost cells
-  exchange_ghost_cells(u,v);
+  //exchange_ghost_cells(u,v);
 }
 
 void dxdt(double *du, double *dv, const double *u, const double *v) {
@@ -110,118 +117,62 @@ double norm(const double *x) {
 }
 
 int main(int argc, char **argv) {
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  int problem_size = argc > 1 ? atoi(argv[1]) : 1;
-  int nruns = argc > 2 ? atoi(argv[2]) : 1;
+    M = 8;
+    N = 8;
+    int local_rows = M / size;
+    if (rank == size -1) local_rows += M % size;
 
-  double scale = sqrt(problem_size);
-  M = (int)(M * scale + 0.5);  // round to nearest int
-  N = (int)(N * scale + 0.5);
-  M += M % 2;  // add 1 if odd
-  N += N % 2;  // add 1 if odd
+    sub_M = local_rows + 2; // +2 for ghost cells
+    sub_N = N;
 
-  MPI_Init(&argc, &argv);
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-
-  double t = 0.0, nrmu, nrmv;
-  int writeInd = 0;
-  double stats[T / m][3];
-
-  //Split into a 4x1 Grid (splitting along slower axis leaving faster computation for each rank)
-  int local_rows = M / size;
-  if (rank == size - 1) {
-      local_rows += M % size;
-  } // add remainder to last rank
+    printf("Rank %d of %d: local_rows=%d, sub_M=%d, sub_N=%d\n", rank, size, local_rows, sub_M, sub_N);
+    i_first = 1;
+    i_last = sub_M -1;
+    if (rank < size-1)
+        global_i_first = rank * (M/size);
+    else
+        global_i_first = M - local_rows; // last rank gets remainder
 
 
-  sub_M = local_rows + 2; // +2 for ghost cells
-  sub_N = N; // full N for each rank
-  
-  i_first = 1; //0 is ghost cell
-  i_last = sub_M -1; //last is ghost cell 
-  
-  global_i_first = rank * (M / size);
+    double *u = (double*)malloc(sub_M * sub_N * sizeof(double));
+    double *v = (double*)malloc(sub_M * sub_N * sizeof(double));
+    double *du = (double*)malloc(sub_M * sub_N * sizeof(double));
+    double *dv = (double*)malloc(sub_M * sub_N * sizeof(double));
 
+    if (!u || !v || !du || !dv) {
+        fprintf(stderr, "Memory allocation failed\n");
+        MPI_Finalize();
+        return 1;
+    }
 
-  // Allocate memory for 1D arrays representing 2D grids using the subdomain sizes
-  double *u = (double *)malloc(sub_M * sub_N * sizeof(double));
-  double *v = (double *)malloc(sub_M * sub_N * sizeof(double));
-  double *du = (double *)malloc(sub_M * sub_N * sizeof(double));
-  double *dv = (double *)malloc(sub_M * sub_N * sizeof(double));
-
-  double init_time = 0.0, step_time = 0.0, norm_time = 0.0, dxdt_time = 0.0;
-  double start_time, end_time, temp_start, temp_end;
-  
-  // Check for allocation success
-  if (!u || !v || !du || !dv) {
-    fprintf(stderr, "Error: Failed to allocate memory\n");
-    return 1;
-  }
-  // initialize the state
-  for (int run = 0; run < nruns; run++) {
-    init_time = 0.0;
-    step_time = 0.0;
-    norm_time = 0.0;
-    dxdt_time = 0.0;
-    start_time = MPI_Wtime();
-    temp_start = MPI_Wtime();
+    // Initialize arrays
     init(u, v);
-    temp_end = MPI_Wtime();
-    init_time += (temp_end - temp_start);
-    // time-loop
 
-    for (int k = 0; k < T; k++) {
-      // track the time
-      t = dt * k;
-      // evaluate the PDE
-      temp_start = MPI_Wtime();
-      dxdt(du, dv, u, v);
-      temp_end = MPI_Wtime();
-      dxdt_time += (temp_end - temp_start);
-      // update the state variables u,v
-      temp_start = MPI_Wtime();
-      step(du, dv, u, v);
-      temp_end = MPI_Wtime();
-      step_time += (temp_end - temp_start);
-      if (k % m == 0) {
-        writeInd = k / m;
-        // calculate the norms
-        temp_start = MPI_Wtime();
-        nrmu = norm(u);
-        nrmv = norm(v);
-        temp_end = MPI_Wtime();
-        norm_time += (temp_end - temp_start);
-        stats[writeInd][0] = t;
-        stats[writeInd][1] = nrmu;
-        stats[writeInd][2] = nrmv;
-      }
-    }
-    // write norms output
-    if (rank == 0){
-      char filename[60];
-      sprintf(filename, "programData/mpi-1_problemsize-%d_%d-ranks_run-%d.dat", problem_size, size, run);
-      FILE *fptr = fopen(filename, "w");
-      fprintf(fptr, "#t\t\tnrmu\t\tnrmv\n");
-      for (int k = 0; k < (T / m); k++) {
-        fprintf(fptr, "%02.5f\t%02.5f\t%02.5f\n", stats[k][0], stats[k][1],
-                stats[k][2]);
-      }
-      fclose(fptr);
+    // Print initial values (first rank only)
+    if (rank == 0) {
+        printf("Initial u:\n");
+        for (int i = i_first; i < i_last; i++) {
+            for (int j = 0; j < sub_N; j++)
+                printf("%f ", u[i*sub_N + j]);
+            printf("\n");
+        }
+        printf("Initial v:\n");
+        for (int i = i_first; i < i_last; i++) {
+            for (int j = 0; j < sub_N; j++)
+                printf("%f ", v[i*sub_N + j]);
+            printf("\n");
+        }
     }
 
-    end_time = MPI_Wtime();
-    if (rank == 0){
-      printf("%d,%d,%d,%f,%f,%f,%f,%f\n",problem_size, size, run, init_time, step_time, dxdt_time, norm_time,
-            end_time - start_time);
-      }
-    }
-  // Free allocated memory
-  free(u);
-  free(v);
-  free(du);
-  free(dv);
- 
-  MPI_Finalize();
-  return 0;
+    
+
+    free(u); free(v); free(du); free(dv);
+    MPI_Finalize();
+    return 0;
 }
+
+

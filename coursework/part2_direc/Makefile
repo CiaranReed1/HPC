@@ -85,12 +85,13 @@ scaling: compile
 		sbatch -n $$n \
 			--export=ALL,PROBLEM_SIZE=$$n,SIZE=$$n,BIN=$(BIN),RUNS=$(RUNS),SPEEDFILE=$(SPEEDFILE) \
 			scaling.sbatch; \
-	    if [ $$n -eq 1 ]; then \
-		sbatch -n 1 \
-			--export=ALL,PROBLEM_SIZE=$$n,SIZE=1,BIN=$(BIN),RUNS=$(RUNS),SPEEDFILE=$(SPEEDFILE) \
-			scaling.sbatch; \
-		fi; \ 
+		if [ $$n -ne 1 ]; then \
+			sbatch -n 1 \
+				--export=ALL,PROBLEM_SIZE=$$n,SIZE=1,BIN=$(BIN),RUNS=$(RUNS),SPEEDFILE=$(SPEEDFILE) \
+				scaling.sbatch; \
+		fi; \
 	done
+
 
 #========================
 # Serial Submission

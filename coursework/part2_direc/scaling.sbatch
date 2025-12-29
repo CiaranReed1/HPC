@@ -18,17 +18,17 @@ module load gcc
 SRC_BASENAME=$(basename "$BIN")       # => 'test' (filename only)
 SRC_BASENAME="${SRC_BASENAME%.*}"     # strip extension if any
 
-OUTFILE="outputs/${SRC_BASENAME}_job-${SLURM_JOB_ID}_${SIZE}ranks_.out"
+OUTFILE="outputs/${SRC_BASENAME}_job-${SLURM_JOB_ID}_${SIZE}-ranks_problemsize-${PROBLEM_SIZE}.out"
 
 #set std out of script output
 exec > "$OUTFILE" 2>&1 
 
-echo "Running $SRC with size $SIZE"
+echo "Running $SRC with problem size $PROBLEM_SIZE and size $SIZE"
 echo "Binary: $BIN"
 echo "Appending results to: $SPEEDFILE"
 
 #runs program
-RUN_OUTPUT=$(mpirun "$BIN" "$RUNS")
+RUN_OUTPUT=$(mpirun "$BIN" "$PROBLEM_SIZE" "$RUNS")
 (
     flock -x 300
     echo "$RUN_OUTPUT" >> "$SPEEDFILE"
@@ -37,7 +37,7 @@ RUN_OUTPUT=$(mpirun "$BIN" "$RUNS")
 # ---- correctness check ----
 for run in $(seq 1 "$RUNS"); do
     echo "checking correctness of run $run ..."
-    PROGRAM_OUTPUT="programData/test_${SIZE}ranks_run${run}.dat"
+    PROGRAM_OUTPUT="programData/test_problemsize-${PROBLEM_SIZE}_${SIZE}-ranks_run-${run}.dat"
     CORRECTNESS_FILE="correctness_${SRC_BASENAME}_${SIZE}ranks__run${run}.txt"
     if diff "$PROGRAM_OUTPUT" programData/serial.dat > "$CORRECTNESS_FILE" 2>&1; then
     echo "Run $run: output matches serial."

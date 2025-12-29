@@ -10,7 +10,7 @@ MAIN ?= part2.c
 RUNS ?= 1
 
 # MPI ranks for weak scaling
-RANKS = 1 2 4 6 8 10 12 14 16 20 24 28 32 36 40 44 48 52 56 60 64 128
+RANKS = 1 2 4 
 
 
 # =========================
@@ -67,12 +67,15 @@ compile: $(BIN)
 
 scaling: compile
 	@mkdir -p $(OUT_DIR) $(DATA_DIR)
-	@echo "size,run_id,init_time,step_time,dxdt_time,norm_time,total_time" > $(SPEEDFILE)
+	@echo "problem_size,size,run_id,init_time,step_time,dxdt_time,norm_time,total_time" > $(SPEEDFILE)
 	@echo "Submitting weak scaling jobs for $(BIN)"
 	@for n in $(RANKS); do \
 		echo "  -> MPI ranks: $$n"; \
 		sbatch -n $$n \
-			--export=ALL,SIZE=$$n,BIN=$(BIN),RUNS=$(RUNS),SPEEDFILE=$(SPEEDFILE) \
+			--export=ALL,PROBLEM_SIZE=$$n,SIZE=$$n,BIN=$(BIN),RUNS=$(RUNS),SPEEDFILE=$(SPEEDFILE) \
+			scaling.sbatch; \
+		sbatch -n 1 \
+			--export=ALL,PROBLEM_SIZE=$$n,SIZE=1,BIN=$(BIN),RUNS=$(RUNS),SPEEDFILE=$(SPEEDFILE) \
 			scaling.sbatch; \
 	done
 

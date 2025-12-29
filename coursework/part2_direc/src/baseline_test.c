@@ -4,6 +4,9 @@
 #include <stdlib.h> // needed for malloc and free
 #include <mpi.h>  // MPI header
 
+int M = 1024;  // x domain size
+int N = 512;   // y domain size
+
 void init(double *u, double *v) {
   int idx;
   for (int i = 0; i < M; i++) {
@@ -76,10 +79,20 @@ double norm(const double *x) {
 
 int main(int argc, char **argv) {
 
+  int problem_size = argc > 1 ? atoi(argv[1]) : 1;
+  int nruns = argc > 2 ? atoi(argv[2]) : 1;
+
+  double scale = sqrt(problem_size);
+  M = (int)(M * scale + 0.5);  // round to nearest int
+  N = (int)(N * scale + 0.5);
+  M += M % 2;  // add 1 if odd
+  N += N % 2;  // add 1 if odd
+
   MPI_Init(&argc, &argv);
   double t = 0.0, nrmu, nrmv;
   int writeInd = 0;
   double stats[T / m][3];
+
 
   // Allocate memory for 1D arrays representing 2D grids
   double *u = (double *)malloc(M * N * sizeof(double));
@@ -90,7 +103,9 @@ int main(int argc, char **argv) {
   double init_time = 0.0, step_time = 0.0, norm_time = 0.0, dxdt_time = 0.0;
   double start_time, end_time, temp_start, temp_end;
 
-  int nruns = argc > 1 ? atoi(argv[1]) : 1;
+
+ 
+
   int rank,size;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -136,7 +151,7 @@ int main(int argc, char **argv) {
     // write norms output
     if (rank == 0){
       char filename[50];
-      sprintf(filename, "programData/test_%dranks_run%d.dat", size, run);
+      sprintf(filename, "programData/test_problemsize-%d_%d-ranks_run-%d.dat", problem_size, size, run);
       FILE *fptr = fopen(filename, "w");
       fprintf(fptr, "#t\t\tnrmu\t\tnrmv\n");
       for (int k = 0; k < (T / m); k++) {
@@ -148,7 +163,7 @@ int main(int argc, char **argv) {
 
     end_time = MPI_Wtime();
     if (rank == 0){
-      printf("%d,%d,%f,%f,%f,%f,%f\n", size, run, init_time, step_time, dxdt_time, norm_time,
+      printf("%d,%d,%d,%f,%f,%f,%f,%f\n",problem_size, size, run, init_time, step_time, dxdt_time, norm_time,
             end_time - start_time);
       }
     }

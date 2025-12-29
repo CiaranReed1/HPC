@@ -1,8 +1,9 @@
 #pragma once
 #define _XOPEN_SOURCE
-
+/*
 const int M = 1024;  // x domain size
 const int N = 512;   // y domain size
+*/
 const int T = 50000; // number of time steps
 const double uhi = 0.5;
 const double ulo = -0.5;
@@ -38,3 +39,6 @@ double stim(int i, int j) {
 static inline double f(double u, double v) { return u * (1.0 - u) * (u - b) - v; }
 
 static inline double g(double u, double v) { return c * (a * u - v); }
+
+extern int M;
+extern int N;

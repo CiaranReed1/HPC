@@ -10,7 +10,7 @@ SERIAL_SRC ?= serial.c
 RUNS ?= 1
 
 # MPI ranks for weak scaling
-RANKS = 1 2 4 
+RANKS = 1 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32 64 128
 
 
 # =========================

@@ -38,8 +38,8 @@ RUN_OUTPUT=$(mpirun "$BIN" "$PROBLEM_SIZE" "$RUNS")
 
 for run in $(seq 1 "$RUNS"); do
     echo "checking correctness of run $run ..."
-    PROGRAM_OUTPUT="programData/test_problemsize-${PROBLEM_SIZE}_${SIZE}-ranks_run-${run}.dat"
-    CORRECTNESS_FILE="correctness_${SRC_BASENAME}_${SIZE}ranks__run${run}.txt"
+    PROGRAM_OUTPUT="programData/${SRC_BASENAME}_problemsize-${PROBLEM_SIZE}_${SIZE}-ranks_run-${run}.dat"
+    CORRECTNESS_FILE="correctness_${SRC_BASENAME}_problemsize-${PROBLEM_SIZE}_${SIZE}-ranks_run${run}.txt"
     if diff "$PROGRAM_OUTPUT" serialData/serial_problemsize-${PROBLEM_SIZE}.dat > "$CORRECTNESS_FILE" 2>&1; then
     echo "Run $run: output matches serial."
     rm "$PROGRAM_OUTPUT" "$CORRECTNESS_FILE"

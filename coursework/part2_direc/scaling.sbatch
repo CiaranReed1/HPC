@@ -13,7 +13,7 @@
 # Modules necessary for job:
 module purge
 module load gcc
-
+module load openmpi
 # set variables
 SRC_BASENAME=$(basename "$BIN")       # => 'test' (filename only)
 SRC_BASENAME="${SRC_BASENAME%.*}"     # strip extension if any
@@ -23,7 +23,7 @@ OUTFILE="outputs/${SRC_BASENAME}_job-${SLURM_JOB_ID}_${SIZE}-ranks_problemsize-$
 #set std out of script output
 exec > "$OUTFILE" 2>&1 
 
-echo "Running $SRC with problem size $PROBLEM_SIZE and size $SIZE"
+echo "Running $SRC_BASENAME with problem size $PROBLEM_SIZE and size $SIZE"
 echo "Binary: $BIN"
 echo "Appending results to: $SPEEDFILE"
 
@@ -49,5 +49,3 @@ fi
 done
 
 
-# ---- cleanup ----
-rm "$BIN"

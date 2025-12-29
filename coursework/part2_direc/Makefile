@@ -54,6 +54,9 @@ LDFLAGS := -lm
 
 $(BIN): $(SRC_DIR)/$(MAIN) params.h
 	@mkdir -p $(BIN_DIR)
+	module purge && \
+	module load gcc && \
+	module load openmpi && \
 	$(CC) $(CFLAGS) $< $(LDFLAGS) -o $@
 	@echo "Built $@"
 
@@ -88,5 +91,6 @@ clean:
 	@echo "Cleaning build artifacts and outputs..."
 	rm -f $(BIN_DIR)/* \
 	      $(OUT_DIR)/*.out $(OUT_DIR)/*.err \
-	      $(DATA_DIR)/*.dat
+	      $(DATA_DIR)/*.lock
+	rm -f correctness*
 	@echo "Clean complete."

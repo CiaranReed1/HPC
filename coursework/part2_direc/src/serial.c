@@ -3,6 +3,9 @@
 #include <stdio.h>  // needed for printing
 #include <stdlib.h> // needed for malloc and free
 
+int M = 1024;  // x domain size
+int N = 512;   // y domain size
+
 void init(double *u, double *v) {
   int idx;
   for (int i = 0; i < M; i++) {
@@ -75,6 +78,14 @@ double norm(const double *x) {
 
 int main(int argc, char **argv) {
 
+  int problem_size = argc > 1 ? atoi(argv[1]) : 1;
+
+  double scale = sqrt(problem_size);
+  M = (int)(M * scale + 0.5);  // round to nearest int
+  N = (int)(N * scale + 0.5);
+  M += M % 2;  // add 1 if odd
+  N += N % 2;  // add 1 if odd
+
   double t = 0.0, nrmu, nrmv;
   int writeInd = 0;
   double stats[T / m][3];
@@ -112,7 +123,9 @@ int main(int argc, char **argv) {
     }
   }
   // write norms output
-  FILE *fptr = fopen("serial.dat", "w");
+  char filename[256];
+  snprintf(filename, sizeof(filename), "serialData/serial_problemsize-%d.dat", problem_size);
+  FILE *fptr = fopen(filename, "w");
   fprintf(fptr, "#t\t\tnrmu\t\tnrmv\n");
   for (int k = 0; k < (T / m); k++) {
     fprintf(fptr, "%02.5f\t%02.5f\t%02.5f\n", stats[k][0], stats[k][1],

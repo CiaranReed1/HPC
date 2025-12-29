@@ -5,7 +5,7 @@
 # Source file to compile (override on command line)
 #   make compile MAIN=test.c
 MAIN ?= part2.c
-
+SERIAL_SRC ?= serial.c
 # MPI runs per job
 RUNS ?= 1
 
@@ -21,6 +21,7 @@ SRC_DIR := src
 BIN_DIR := bin
 OUT_DIR := outputs
 DATA_DIR := scalingData
+PROG_DATA_DIR := programData
 
 
 # =========================
@@ -29,6 +30,8 @@ DATA_DIR := scalingData
 
 BASENAME := $(notdir $(MAIN:.c=))
 BIN := $(BIN_DIR)/$(BASENAME)
+SERIAL_BIN = bin/serial 
+
 SPEEDFILE := $(DATA_DIR)/$(BASENAME)_weak_scaling.dat
 
 
@@ -45,7 +48,7 @@ LDFLAGS := -lm
 # Phony targets
 # =========================
 
-.PHONY: compile scaling clean
+.PHONY: compile scaling clean serial serial-compile
 
 
 # =========================
@@ -60,9 +63,14 @@ $(BIN): $(SRC_DIR)/$(MAIN) params.h
 	$(CC) $(CFLAGS) $< $(LDFLAGS) -o $@
 	@echo "Built $@"
 
+$(SERIAL_BIN): $(SRC_DIR)/$(SERIAL_SRC) params.h
+	@mkdir -p $(BIN_DIR)
+	gcc -I. $< -lm -o $@
+	@echo "Built serial binary: $@"
+
 
 compile: $(BIN)
-
+serial-compile: $(SERIAL_BIN)
 
 # =========================
 # Weak scaling submission
@@ -82,6 +90,18 @@ scaling: compile
 			scaling.sbatch; \
 	done
 
+#========================
+# Serial Submission
+#========================
+serial: serial-compile
+	@mkdir -p $(OUT_DIR) $(DATA_DIR)
+	@echo "Submitting serial jobs for $(SERIAL_BIN)"
+	@for n in $(RANKS); do \
+		echo "  -> Problem Size: $$n"; \
+		sbatch \
+			--export=ALL,PROBLEM_SIZE=$$n,BIN=$(SERIAL_BIN),RUNS=$(RUNS),SPEEDFILE=$(SPEEDFILE) \
+			serial.sbatch; \
+	done
 
 # =========================
 # Cleanup
@@ -92,5 +112,6 @@ clean:
 	rm -f $(BIN_DIR)/* \
 	      $(OUT_DIR)/*.out $(OUT_DIR)/*.err \
 	      $(DATA_DIR)/*.lock
+	rm -f $(PROG_DATA_DIR)/*
 	rm -f correctness*
 	@echo "Clean complete."

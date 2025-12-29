@@ -116,6 +116,10 @@ int main(int argc, char **argv) {
   }
   // initialize the state
   for (int run = 0; run < nruns; run++) {
+    init_time = 0.0;
+    step_time = 0.0;
+    norm_time = 0.0;
+    dxdt_time = 0.0;
     start_time = MPI_Wtime();
     temp_start = MPI_Wtime();
     init(u, v);

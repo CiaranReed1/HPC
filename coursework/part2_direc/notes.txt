@@ -1,0 +1,8 @@
+Development Notes:
+-We can do a n (ranks) x 1 grid, breaking down the vertical (i) direction into tall slabs of width N and height M/n. 
+After each function there will need to be n*2 -2 messages sent to update the whole system. I will implement this first
+-created sub M and sub N to give the dimensions of the each ranks
+-defined first i and last i to be the indicies of the first and last points (not ghost cells), note all ranks will have ghost cells at the top and bottom
+-using my knowledge from mpi-heat, using send recv is probably the best way to implement halo exchanges, will start with that
+
+-for norm i will initially implement with an all reduce, but it should be noted that doing with a single reduce might be better and should be tested

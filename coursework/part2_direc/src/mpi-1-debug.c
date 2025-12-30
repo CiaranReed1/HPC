@@ -4,8 +4,8 @@
 #include <stdlib.h> // needed for malloc and free
 #include <mpi.h>  // MPI header
 
-int M = 1024;  // x domain size
-int N = 512;   // y domain size
+int M = 9;  // x domain size
+int N = 8;   // y domain size
 int sub_M,sub_N; //subdomain sizes for each rank
 int i_first, i_last; //local indices for first and last rows in each rank
 int global_i_first; //global index for first row in each rank
@@ -36,19 +36,28 @@ void init(double *u, double *v) {
       idx = i * sub_N + j;
       //for calculatoin of u, the i needs to be scaled to the global index
       int i_scaled = global_i_first + (i - i_first);
-      
-      if (i == i_first && j < 5) {
-          printf("Rank %d: i=%d, j=%d, i_scaled=%d, u=%f, v=%f\n",
-                rank, i, j, i_scaled, u[idx], v[idx]);
-          fflush(stdout);
-      }
-     
       u[idx] = ulo + (uhi - ulo) * 0.5 * (1.0 + tanh((i_scaled - 0.5 * M) / 16.0));
       v[idx] = vlo + (vhi - vlo) * 0.5 * (1.0 + tanh((j - 0.5 * N) / 16.0));
     }
   }
-  // now do a halo exchange to fill ghost cells
-  //exchange_ghost_cells(u,v);
+ 
+  // top global boundary ghost cells 
+  if (rank == 0) {
+      for (int j = 0; j < sub_N; j++) {
+          u[0 * sub_N + j] = u[i_first * sub_N + j];
+          v[0 * sub_N + j] = v[i_first * sub_N + j];
+      }
+  }
+
+  // bottom global boundary ghost cells
+  if (rank == size - 1) {
+      for (int j = 0; j < sub_N; j++) {
+          u[(sub_M - 1) * sub_N + j] = u[(i_last - 1) * sub_N + j];
+          v[(sub_M - 1) * sub_N + j] = v[(i_last - 1) * sub_N + j];
+      }
+  }
+  // now do a halo exchange to fill interior ghost cells
+  exchange_ghost_cells(u,v); 
 }
 
 void dxdt(double *du, double *dv, const double *u, const double *v) {
@@ -116,63 +125,89 @@ double norm(const double *x) {
   return nrmx;
 }
 
-int main(int argc, char **argv) {
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
+int main(int argc, char **argv)
+{
+    
+  int problem_size = argc > 1 ? atoi(argv[1]) : 1;
+  int nruns = argc > 2 ? atoi(argv[2]) : 1;
 
-    M = 8;
-    N = 8;
-    int local_rows = M / size;
-    if (rank == size -1) local_rows += M % size;
+  double scale = sqrt(problem_size);
+  M = (int)(M * scale + 0.5);  // round to nearest int
+  N = (int)(N * scale + 0.5);
+  M += M % 2;  // add 1 if odd
+  N += N % 2;  // add 1 if odd
 
-    sub_M = local_rows + 2; // +2 for ghost cells
-    sub_N = N;
+  MPI_Init(&argc, &argv);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    printf("Rank %d of %d: local_rows=%d, sub_M=%d, sub_N=%d\n", rank, size, local_rows, sub_M, sub_N);
-    i_first = 1;
-    i_last = sub_M -1;
-    if (rank < size-1)
-        global_i_first = rank * (M/size);
-    else
-        global_i_first = M - local_rows; // last rank gets remainder
+  double t = 0.0, nrmu, nrmv;
+  int writeInd = 0;
+  double stats[T / m][3];
+
+  //Split into a 4x1 Grid (splitting along slower axis leaving faster computation for each rank)
+  int local_rows = M / size;
+  if (rank == size - 1) {
+      local_rows += M % size;
+  } // add remainder to last rank
 
 
-    double *u = (double*)malloc(sub_M * sub_N * sizeof(double));
-    double *v = (double*)malloc(sub_M * sub_N * sizeof(double));
-    double *du = (double*)malloc(sub_M * sub_N * sizeof(double));
-    double *dv = (double*)malloc(sub_M * sub_N * sizeof(double));
+  sub_M = local_rows + 2; // +2 for ghost cells
+  sub_N = N; // full N for each rank
+  
+  i_first = 1; //0 is ghost cell
+  i_last = sub_M -1; //last is ghost cell 
+  
+  global_i_first = rank * (M / size);
 
-    if (!u || !v || !du || !dv) {
-        fprintf(stderr, "Memory allocation failed\n");
-        MPI_Finalize();
-        return 1;
+    /* --- allocate arrays --- */
+    double *u  = malloc(sub_M * sub_N * sizeof(double));
+    double *v  = malloc(sub_M * sub_N * sizeof(double));
+
+    if (!u || !v) {
+        fprintf(stderr, "Rank %d: allocation failed\n", rank);
+        MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    // Initialize arrays
+    /* --- initialize --- */
     init(u, v);
 
-    // Print initial values (first rank only)
-    if (rank == 0) {
-        printf("Initial u:\n");
-        for (int i = i_first; i < i_last; i++) {
-            for (int j = 0; j < sub_N; j++)
-                printf("%f ", u[i*sub_N + j]);
-            printf("\n");
+    /* --- ordered printing --- */
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    for (int r = 0; r < size; r++) {
+        if (rank == r) {
+            printf("\n==============================\n");
+            printf("Rank %d\n", rank);
+            printf("global_i_first = %d\n", global_i_first);
+            printf("local rows (physical) = %d\n", i_last - i_first);
+            printf("sub_M = %d, sub_N = %d\n", sub_M, sub_N);
+
+            for (int i = 0; i < sub_M; i++) {
+                int gi = (i >= i_first && i < i_last)
+                           ? global_i_first + (i - i_first)
+                           : -1;  // ghost row
+
+                printf("i = %2d (global %2d): ", i, gi);
+                for (int j = 0; j < sub_N; j++) {
+                    int idx = i * sub_N + j;
+                    printf("%+.4e ", u[idx]);
+                }
+                printf(" | ");
+                for (int j = 0; j < sub_N; j++) {
+                    int idx = i * sub_N + j;
+                    printf("%+.4e ", v[idx]);
+                }
+                printf("\n");
+            }
+            fflush(stdout);
         }
-        printf("Initial v:\n");
-        for (int i = i_first; i < i_last; i++) {
-            for (int j = 0; j < sub_N; j++)
-                printf("%f ", v[i*sub_N + j]);
-            printf("\n");
-        }
+        MPI_Barrier(MPI_COMM_WORLD);
     }
 
-    
+    free(u);
+    free(v);
 
-    free(u); free(v); free(du); free(dv);
     MPI_Finalize();
     return 0;
 }
-
-

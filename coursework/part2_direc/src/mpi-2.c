@@ -4,8 +4,8 @@
 #include <stdlib.h> // needed for malloc and free
 #include <mpi.h>  // MPI header
 
-int M = 40;  // x domain size
-int N = 20;   // y domain size
+int M = 1024;  // x domain size
+int N = 512;   // y domain size
 int sub_M,sub_N; //subdomain sizes for each rank
 int i_first, i_last; //local indices for first and last rows in each rank
 int global_i_first; //global index for first row in each rank
@@ -40,8 +40,23 @@ void init(double *u, double *v) {
       v[idx] = vlo + (vhi - vlo) * 0.5 * (1.0 + tanh((j - 0.5 * N) / 16.0));
     }
   }
-  // now do a halo exchange to fill ghost cells
-  exchange_ghost_cells(u,v);
+   // top global boundary ghost cells 
+  if (rank == 0) {
+      for (int j = 0; j < sub_N; j++) {
+          u[0 * sub_N + j] = u[i_first * sub_N + j];
+          v[0 * sub_N + j] = v[i_first * sub_N + j];
+      }
+  }
+
+  // bottom global boundary ghost cells
+  if (rank == size - 1) {
+      for (int j = 0; j < sub_N; j++) {
+          u[(sub_M - 1) * sub_N + j] = u[(i_last - 1) * sub_N + j];
+          v[(sub_M - 1) * sub_N + j] = v[(i_last - 1) * sub_N + j];
+      }
+  }
+  // now do a halo exchange to fill interior ghost cells
+  exchange_ghost_cells(u,v); 
 }
 
 void dxdt(double *du, double *dv, const double *u, const double *v) {

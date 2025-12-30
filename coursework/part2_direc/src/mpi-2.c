@@ -215,7 +215,7 @@ int main(int argc, char **argv) {
     // write norms output
     if (rank == 0){
       char filename[60];
-      sprintf(filename, "programData/mpi-1_problemsize-%d_%d-ranks_run-%d.dat", problem_size, size, run);
+      sprintf(filename, "programData/mpi-2_problemsize-%d_%d-ranks_run-%d.dat", problem_size, size, run);
       FILE *fptr = fopen(filename, "w");
       fprintf(fptr, "#t\t\tnrmu\t\tnrmv\n");
       for (int k = 0; k < (T / m); k++) {

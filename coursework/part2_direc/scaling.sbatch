@@ -36,10 +36,19 @@ RUN_OUTPUT=$(mpirun "$BIN" "$PROBLEM_SIZE" "$RUNS")
 
 # ---- correctness check ----
 
-for run in $(seq 1 "$RUNS"); do
+for run in $(seq 0 $((RUNS-1))); do
     echo "checking correctness of run $run ..."
     PROGRAM_OUTPUT="programData/${SRC_BASENAME}_problemsize-${PROBLEM_SIZE}_${SIZE}-ranks_run-${run}.dat"
     CORRECTNESS_FILE="correctness_${SRC_BASENAME}_problemsize-${PROBLEM_SIZE}_${SIZE}-ranks_run${run}.txt"
+    if [[ ! -f "$PROGRAM_OUTPUT" ]]; then
+    echo "Missing output file: $PROGRAM_OUTPUT"
+    continue
+    fi
+
+    if [[ ! -f "serialData/serial_problemsize-${PROBLEM_SIZE}.dat" ]]; then
+        echo "Missing serial reference file!"
+        continue
+    fi
     if diff "$PROGRAM_OUTPUT" serialData/serial_problemsize-${PROBLEM_SIZE}.dat > "$CORRECTNESS_FILE" 2>&1; then
     echo "Run $run: output matches serial."
     rm "$PROGRAM_OUTPUT" "$CORRECTNESS_FILE"

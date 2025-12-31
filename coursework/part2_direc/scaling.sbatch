@@ -27,18 +27,19 @@ echo "Running $SRC_BASENAME with problem size $PROBLEM_SIZE and size $SIZE"
 echo "Binary: $BIN"
 echo "Appending results to: $SPEEDFILE"
 
-#runs program
-RUN_OUTPUT=$(mpirun "$BIN" "$PROBLEM_SIZE" "$RUNS")
-(
-    flock -x 300
-    echo "$RUN_OUTPUT" >> "$SPEEDFILE"
-) 300>>"$SPEEDFILE.lock"
 
 # ---- correctness check ----
 
 for run in $(seq 0 $((RUNS-1))); do
+    #runs program
+    RUN_OUTPUT=$(mpirun "$BIN" "$PROBLEM_SIZE")
+    (
+        flock -x 300
+        echo "$RUN_OUTPUT" >> "$SPEEDFILE"
+    ) 300>>"$SPEEDFILE.lock"
+
     echo "checking correctness of run $run ..."
-    PROGRAM_OUTPUT="programData/${SRC_BASENAME}_problemsize-${PROBLEM_SIZE}_${SIZE}-ranks_run-${run}.dat"
+    PROGRAM_OUTPUT="programData/${SRC_BASENAME}_problemsize-${PROBLEM_SIZE}_${SIZE}-ranks.dat"
     CORRECTNESS_FILE="correctness_${SRC_BASENAME}_problemsize-${PROBLEM_SIZE}_${SIZE}-ranks_run${run}.txt"
     if [[ ! -f "$PROGRAM_OUTPUT" ]]; then
     echo "Missing output file: $PROGRAM_OUTPUT"

@@ -158,8 +158,6 @@ double norm(const double *x) {
 int main(int argc, char **argv) {
 
   int problem_size = argc > 1 ? atoi(argv[1]) : 1;
-  int nruns = argc > 2 ? atoi(argv[2]) : 1;
-
   double scale = sqrt(problem_size);
   M = (int)(M * scale + 0.5);  // round to nearest int
   N = (int)(N * scale + 0.5);
@@ -183,10 +181,10 @@ int main(int argc, char **argv) {
 
   sub_M = local_rows + 2; // +2 for ghost cells
   sub_N = N; // full N for each rank
-  
+
   i_first = 1; //0 is ghost cell
   i_last = sub_M -1; //last is ghost cell 
-  
+
   global_i_first = rank * (M / size);
 
 
@@ -198,69 +196,68 @@ int main(int argc, char **argv) {
 
   double init_time = 0.0, step_time = 0.0, norm_time = 0.0, dxdt_time = 0.0;
   double start_time, end_time, temp_start, temp_end;
-  
+
   // Check for allocation success
   if (!u || !v || !du || !dv) {
     fprintf(stderr, "Error: Failed to allocate memory\n");
     return 1;
   }
   // initialize the state
-  for (int run = 0; run < nruns; run++) {
-    init_time = 0.0;
-    step_time = 0.0;
-    norm_time = 0.0;
-    dxdt_time = 0.0;
-    start_time = MPI_Wtime();
+
+  init_time = 0.0;
+  step_time = 0.0;
+  norm_time = 0.0;
+  dxdt_time = 0.0;
+  start_time = MPI_Wtime();
+  temp_start = MPI_Wtime();
+  init(u, v);
+  temp_end = MPI_Wtime();
+  init_time += (temp_end - temp_start);
+  // time-loop
+
+  for (int k = 0; k < T; k++) {
+    // track the time
+    t = dt * k;
+    // evaluate the PDE
     temp_start = MPI_Wtime();
-    init(u, v);
+    dxdt(du, dv, u, v);
     temp_end = MPI_Wtime();
-    init_time += (temp_end - temp_start);
-    // time-loop
-
-    for (int k = 0; k < T; k++) {
-      // track the time
-      t = dt * k;
-      // evaluate the PDE
+    dxdt_time += (temp_end - temp_start);
+    // update the state variables u,v
+    temp_start = MPI_Wtime();
+    step(du, dv, u, v);
+    temp_end = MPI_Wtime();
+    step_time += (temp_end - temp_start);
+    if (k % m == 0) {
+      writeInd = k / m;
+      // calculate the norms
       temp_start = MPI_Wtime();
-      dxdt(du, dv, u, v);
+      nrmu = norm(u);
+      nrmv = norm(v);
       temp_end = MPI_Wtime();
-      dxdt_time += (temp_end - temp_start);
-      // update the state variables u,v
-      temp_start = MPI_Wtime();
-      step(du, dv, u, v);
-      temp_end = MPI_Wtime();
-      step_time += (temp_end - temp_start);
-      if (k % m == 0) {
-        writeInd = k / m;
-        // calculate the norms
-        temp_start = MPI_Wtime();
-        nrmu = norm(u);
-        nrmv = norm(v);
-        temp_end = MPI_Wtime();
-        norm_time += (temp_end - temp_start);
-        stats[writeInd][0] = t;
-        stats[writeInd][1] = nrmu;
-        stats[writeInd][2] = nrmv;
-      }
+      norm_time += (temp_end - temp_start);
+      stats[writeInd][0] = t;
+      stats[writeInd][1] = nrmu;
+      stats[writeInd][2] = nrmv;
     }
-    // write norms output
-    if (rank == 0){
-      char filename[60];
-      sprintf(filename, "programData/mpi-2_problemsize-%d_%d-ranks_run-%d.dat", problem_size, size, run);
-      FILE *fptr = fopen(filename, "w");
-      fprintf(fptr, "#t\t\tnrmu\t\tnrmv\n");
-      for (int k = 0; k < (T / m); k++) {
-        fprintf(fptr, "%02.5f\t%02.5f\t%02.5f\n", stats[k][0], stats[k][1],
-                stats[k][2]);
-      }
-      fclose(fptr);
+  }
+  // write norms output
+  if (rank == 0){
+    char filename[60];
+    sprintf(filename, "programData/mpi-2_problemsize-%d_%d-ranks.dat", problem_size, size);
+    FILE *fptr = fopen(filename, "w");
+    fprintf(fptr, "#t\t\tnrmu\t\tnrmv\n");
+    for (int k = 0; k < (T / m); k++) {
+      fprintf(fptr, "%02.5f\t%02.5f\t%02.5f\n", stats[k][0], stats[k][1],
+              stats[k][2]);
     }
+    fclose(fptr);
+  }
 
-    end_time = MPI_Wtime();
-    if (rank == 0){
-      printf("%d,%d,%d,%f,%f,%f,%f,%f\n",problem_size, size, run, init_time, step_time, dxdt_time, norm_time,
-            end_time - start_time);
-      }
+  end_time = MPI_Wtime();
+  if (rank == 0){
+    printf("%d,%d,%f,%f,%f,%f,%f\n",problem_size, size, init_time, step_time, dxdt_time, norm_time,
+          end_time - start_time);
     }
   // Free allocated memory
   free(u);

@@ -40,8 +40,7 @@ void init(double *u, double *v) {
       v[idx] = vlo + (vhi - vlo) * 0.5 * (1.0 + tanh((j - 0.5 * N) / 16.0));
     }
   }
- 
-  // top global boundary ghost cells 
+   // top global boundary ghost cells 
   if (rank == 0) {
       for (int j = 0; j < sub_N; j++) {
           u[0 * sub_N + j] = u[i_first * sub_N + j];
@@ -113,105 +112,51 @@ void step(const double *du, const double *dv, double *u, double *v) {
 }
 
 double norm(const double *x) {
-  double nrmx = 0.0;
-  int idx;
-  for (int i = i_first; i < i_last; i++) {
-    for (int j = 0; j < sub_N; j++) {
-      idx = i * sub_N + j;
-      nrmx += x[idx] * x[idx];
-    }
+  /*Initially I had solved this using an MPI_Allreduce, however this causes floating point errors and the result differed from the serial result by a tiny margin.
+  Given that the assignment brief tells us to ensure the resulting data exactly matches the serial data, I have attempted to fix this.
+  My solution gathers all the local arrays onto one rank and calculates the norm serially to ensure coherant order of operations with a serial execution*/
+
+  int local_count = (i_last - i_first) * sub_N; //number of elements in local array excluding ghost cells
+  int *counts = NULL, *displs = NULL;;
+  double *global_x = NULL;
+  if (rank ==0){
+      counts = malloc(size * sizeof(int));
+      displs = malloc(size * sizeof(int));
   }
-  MPI_Allreduce(&nrmx,&nrmx,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-  return nrmx;
-}
-
-double norm_debug(const double *x) {
-    double local = 0.0;
-    int idx;
-
-    for (int i = i_first; i < i_last; i++) {
-        for (int j = 0; j < sub_N; j++) {
-            idx = i * sub_N + j;
-            local += x[idx] * x[idx];
-        }
-    }
-
-    double *partials = NULL;
-    if (rank == 0) {
-        partials = malloc(size * sizeof(double));
-    }
-    MPI_Gather(&local, 1, MPI_DOUBLE, partials, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    double nrmx;
-    if (rank ==0){
-      nrmx = 0.0;
+  MPI_Gather(&local_count,1,MPI_INT,counts,1,MPI_INT,0,MPI_COMM_WORLD);  //gathers the counts of elements from each rank
+  //now gather all local counts to rank 0, work out the displacements for each rank
+  if (rank ==0){
+      int total_count =0;
+      displs[0]=0;
       for (int r =0; r < size; r++){
-          nrmx += partials[r];
+          total_count += counts[r];
+          if (r > 0){
+            displs[r] = displs[r-1] + counts[r-1]; //works out displacements, to know where to place the data from each rank
+          }
       }
-      free(partials);
+      global_x = malloc(total_count * sizeof(double));
+  }
+  //gathers all local arrays to rank 0, using counts and displs to know how much data to expect from each rank and where to place it
+  MPI_Gatherv(&x[i_first * sub_N], local_count, MPI_DOUBLE,
+          global_x, counts, displs, MPI_DOUBLE,
+          0, MPI_COMM_WORLD); 
+  /*Calculates the global norm from the gathered global array on rank 0 */
+  double global_nrmx = 0.0;
+  if (rank ==0){
+    free(counts);
+    free(displs);
+    global_nrmx =0.0;
+    for (int i =0; i < (M * N); i++){
+        global_nrmx += global_x[i] * global_x[i];
     }
-
-
-    //first find out how many elements each rank has contributed
-    int local_count = (i_last - i_first) * sub_N;
-    int *counts = NULL;
-    double *global_x = NULL;
-    int *displs = NULL;
-    if (rank ==0){
-        counts = malloc(size * sizeof(int));
-        displs = malloc(size * sizeof(int));
-    }
-    MPI_Gather(&local_count,1,MPI_INT,counts,1,MPI_INT,0,MPI_COMM_WORLD);
-    //now gather all data to rank 0
-    if (rank ==0){
-        int total_count =0;
-        displs[0]=0;
-        for (int r =0; r < size; r++){
-            total_count += counts[r];
-            if (r > 0){
-              displs[r] = displs[r-1] + counts[r-1];
-            }
-        }
-        global_x = malloc(total_count * sizeof(double));
-    }
-    
-    MPI_Gatherv(&x[i_first * sub_N], local_count, MPI_DOUBLE,
-            global_x, counts, displs, MPI_DOUBLE,
-            0, MPI_COMM_WORLD);
-    
-    double check_nrmx;
-    if (rank ==0){
-      free(counts);
-      free(displs);
-      check_nrmx =0.0;
-      for (int i =0; i < (M * N); i++){
-          check_nrmx += global_x[i] * global_x[i];
-      }
-      free(global_x);
-    }
-                
-
-    printf("Rank %d local norm contribution = %.17e\n", rank, local);
-    fflush(stdout);
-
-    double global;
-    MPI_Allreduce(&nrmx, &global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    if (rank == 0){
-        printf("Global norm after Allreduce = %.17e\n", global);
-    }
-    if (rank == 0){
-      printf("Global norm after manual gather = %.17e\n", nrmx);
-    }
-    if (rank == 0){
-    printf("Global norm after gathering entire array = %.17e\n", check_nrmx);
-    }
-    return global;
+    free(global_x);
+  }
+  /*I could broadcast the global x from rank 0 to all other ranks if needed, but this is unnecessary here and returning 0.0 for other ranks is fine*/
+  return global_nrmx; 
 }
 
+int main(int argc, char **argv) {
 
-
-int main(int argc, char **argv)
-{
-    
   int problem_size = argc > 1 ? atoi(argv[1]) : 1;
   int nruns = argc > 2 ? atoi(argv[2]) : 1;
 
@@ -244,32 +189,85 @@ int main(int argc, char **argv)
   
   global_i_first = rank * (M / size);
 
-    /* --- allocate arrays --- */
-    double *u  = malloc(sub_M * sub_N * sizeof(double));
-    double *v  = malloc(sub_M * sub_N * sizeof(double));
-    double *du = malloc(sub_M * sub_N * sizeof(double));
-    double *dv = malloc(sub_M * sub_N * sizeof(double));
-    if (!u || !v || !du || !dv) {
-        fprintf(stderr, "Rank %d: allocation failed\n", rank);
-        MPI_Abort(MPI_COMM_WORLD, 1);
+
+  // Allocate memory for 1D arrays representing 2D grids using the subdomain sizes
+  double *u = (double *)malloc(sub_M * sub_N * sizeof(double));
+  double *v = (double *)malloc(sub_M * sub_N * sizeof(double));
+  double *du = (double *)malloc(sub_M * sub_N * sizeof(double));
+  double *dv = (double *)malloc(sub_M * sub_N * sizeof(double));
+
+  double init_time = 0.0, step_time = 0.0, norm_time = 0.0, dxdt_time = 0.0;
+  double start_time, end_time, temp_start, temp_end;
+  
+  // Check for allocation success
+  if (!u || !v || !du || !dv) {
+    fprintf(stderr, "Error: Failed to allocate memory\n");
+    return 1;
+  }
+  // initialize the state
+  for (int run = 0; run < nruns; run++) {
+    init_time = 0.0;
+    step_time = 0.0;
+    norm_time = 0.0;
+    dxdt_time = 0.0;
+    start_time = MPI_Wtime();
+    temp_start = MPI_Wtime();
+    init(u, v);
+    temp_end = MPI_Wtime();
+    init_time += (temp_end - temp_start);
+    // time-loop
+
+    for (int k = 0; k < T; k++) {
+      // track the time
+      t = dt * k;
+      // evaluate the PDE
+      temp_start = MPI_Wtime();
+      dxdt(du, dv, u, v);
+      temp_end = MPI_Wtime();
+      dxdt_time += (temp_end - temp_start);
+      // update the state variables u,v
+      temp_start = MPI_Wtime();
+      step(du, dv, u, v);
+      temp_end = MPI_Wtime();
+      step_time += (temp_end - temp_start);
+      if (k % m == 0) {
+        writeInd = k / m;
+        // calculate the norms
+        temp_start = MPI_Wtime();
+        nrmu = norm(u);
+        nrmv = norm(v);
+        temp_end = MPI_Wtime();
+        norm_time += (temp_end - temp_start);
+        stats[writeInd][0] = t;
+        stats[writeInd][1] = nrmu;
+        stats[writeInd][2] = nrmv;
+      }
+    }
+    // write norms output
+    if (rank == 0){
+      char filename[60];
+      sprintf(filename, "programData/mpi-2_problemsize-%d_%d-ranks_run-%d.dat", problem_size, size, run);
+      FILE *fptr = fopen(filename, "w");
+      fprintf(fptr, "#t\t\tnrmu\t\tnrmv\n");
+      for (int k = 0; k < (T / m); k++) {
+        fprintf(fptr, "%02.5f\t%02.5f\t%02.5f\n", stats[k][0], stats[k][1],
+                stats[k][2]);
+      }
+      fclose(fptr);
     }
 
-    /* --- initialize --- */
-    init(u, v);
-
-    /* --- ordered printing --- */
-    MPI_Barrier(MPI_COMM_WORLD);
-
-   dxdt(du,dv,u,v);
-   step(du,dv,u,v);
-   dxdt(du,dv,u,v);
-   step(du,dv,u,v);
-   norm_debug(u);
-   norm_debug(v);
-
-    free(u);
-    free(v);
-
-    MPI_Finalize();
-    return 0;
+    end_time = MPI_Wtime();
+    if (rank == 0){
+      printf("%d,%d,%d,%f,%f,%f,%f,%f\n",problem_size, size, run, init_time, step_time, dxdt_time, norm_time,
+            end_time - start_time);
+      }
+    }
+  // Free allocated memory
+  free(u);
+  free(v);
+  free(du);
+  free(dv);
+ 
+  MPI_Finalize();
+  return 0;
 }

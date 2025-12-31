@@ -67,7 +67,7 @@ speedup_df.loc[speedup_df['max_size'] == 1, se_cols] = 0.0
 print(speedup_df)
 for col in time_cols:
     xs = np.arange(1, speedup_df['max_size'].max() + 1)
-    popt, pcov = optimize.curve_fit(speedup_model, speedup_df['max_size'], speedup_df[f'{col}_speedup'], sigma=speedup_df[f'{col}_speedup_se'], absolute_sigma=True,p0=[0.9])
+    popt, pcov = optimize.curve_fit(speedup_model, speedup_df['max_size'], speedup_df[f'{col}_speedup'],p0=[0.9],bounds=(0,1))
     ys = speedup_model(xs, *popt)
     yerr = np.sqrt(np.diag(pcov))
     
@@ -76,8 +76,9 @@ for col in time_cols:
         speedup_df['problem_size'],
         speedup_df[f'{col}_speedup'],
         yerr=speedup_df[f'{col}_speedup_se'],
-        capsize=5,linestyle="",marker="",label="Measured Speedup",
-        color = "blue"
+        capsize=5,linestyle="",label="Measured Speedup",
+        color = "blue",
+        marker = "o"
     )
     ax.plot(xs, ys, label=f"Fitted Model: f={popt[0]:.3f} ± {yerr[0]:.3f}", color="red")
     ax.set_xlabel("Problem Size, n")

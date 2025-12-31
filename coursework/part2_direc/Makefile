@@ -78,7 +78,7 @@ serial-compile: $(SERIAL_BIN)
 
 scaling: compile
 	@mkdir -p $(OUT_DIR) $(DATA_DIR)
-	@echo "problem_size,size,run_id,init_time,step_time,dxdt_time,norm_time,total_time" > $(SPEEDFILE)
+	@echo "problem_size,size,init_time,step_time,dxdt_time,norm_time,total_time" > $(SPEEDFILE)
 	@echo "Submitting weak scaling jobs for $(BIN)"
 	@for n in $(RANKS); do \
 		echo "  -> MPI ranks: $$n"; \

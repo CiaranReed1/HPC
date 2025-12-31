@@ -1,4 +1,4 @@
-problem_size,size,run_id,init_time,step_time,dxdt_time,norm_time,total_time
+problem_size,size,init_time,step_time,dxdt_time,norm_time,total_time
 1,1,0.028609,183.719779,541.372916,2.524293,727.700103
 2,2,0.039884,177.791112,545.574122,5.098445,728.548099
 4,4,0.032475,208.683912,545.245691,11.003353,765.033819

@@ -1,4 +1,6 @@
+#define iniline static inline
 #include "params.h" // model & simulation parameters
+#undef inline
 #include <math.h>   // needed for tanh, used in init function
 #include <stdio.h>  // needed for printing
 #include <stdlib.h> // needed for malloc and free

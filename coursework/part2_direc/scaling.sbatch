@@ -1,0 +1,64 @@
+#!/bin/bash
+# Request resources:
+#SBATCH -N 1		# number of compute nodes. 
+#SBATCH --mem=10G	# memory required, up to 250G on standard nodes
+#SBATCH -e /dev/null
+#SBATCH --output=/dev/null
+#SBATCH --cpus-per-task=1
+#SBATCH --time=2-0:00:00	# time limit for job (format:  days-hours:minutes:seconds)
+# Specify the tasks to run:
+# Run in the 'shared' queue (job may share node with other jobs)
+#SBATCH -p shared
+
+# Modules necessary for job:
+module purge
+module load gcc
+module load openmpi
+# set variables
+SRC_BASENAME=$(basename "$BIN")       # => 'test' (filename only)
+SRC_BASENAME="${SRC_BASENAME%.*}"     # strip extension if any
+
+OUTFILE="outputs/${SRC_BASENAME}_job-${SLURM_JOB_ID}_${SIZE}-ranks_problemsize-${PROBLEM_SIZE}.out"
+
+#set std out of script output
+exec > "$OUTFILE" 2>&1 
+
+echo "Running $SRC_BASENAME with problem size $PROBLEM_SIZE and size $SIZE"
+echo "Binary: $BIN"
+echo "Appending results to: $SPEEDFILE"
+
+
+# ---- correctness check ----
+
+for run in $(seq 0 $((RUNS-1))); do
+    #runs program
+    RUN_OUTPUT=$(mpirun "$BIN" "$PROBLEM_SIZE")
+    (
+        flock -x 300
+        echo "$RUN_OUTPUT" >> "$SPEEDFILE"
+    ) 300>>"$SPEEDFILE.lock"
+
+    echo "checking correctness of run $run ..."
+    PROGRAM_OUTPUT="programData/${SRC_BASENAME}_problemsize-${PROBLEM_SIZE}_${SIZE}-ranks.dat"
+    CORRECTNESS_FILE="correctness_${SRC_BASENAME}_problemsize-${PROBLEM_SIZE}_${SIZE}-ranks_run${run}.txt"
+    if [[ ! -f "$PROGRAM_OUTPUT" ]]; then
+    echo "Missing output file: $PROGRAM_OUTPUT"
+    continue
+    fi
+
+    if [[ ! -f "serialData/serial_problemsize-${PROBLEM_SIZE}.dat" ]]; then
+        echo "Missing serial reference file!"
+        continue
+    fi
+    if diff "$PROGRAM_OUTPUT" serialData/serial_problemsize-${PROBLEM_SIZE}.dat > "$CORRECTNESS_FILE" 2>&1; then
+    echo "Run $run: output matches serial."
+    rm "$PROGRAM_OUTPUT" "$CORRECTNESS_FILE"
+    else
+    echo "Run $run: output differs from serial!"
+    echo "See $CORRECTNESS_FILE"
+    fi
+done
+
+# ---- end correctness check ----
+
+

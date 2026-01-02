@@ -1,0 +1,19 @@
+Running part1.c with 20 threads
+Binary: bin/part1_20_part1
+Appending results to: newData/part1_strong_scaling.dat
+Run 1 / 8
+Run 1: output matches serial.
+Run 2 / 8
+Run 2: output matches serial.
+Run 3 / 8
+Run 3: output matches serial.
+Run 4 / 8
+Run 4: output matches serial.
+Run 5 / 8
+Run 5: output matches serial.
+Run 6 / 8
+Run 6: output matches serial.
+Run 7 / 8
+Run 7: output matches serial.
+Run 8 / 8
+Run 8: output matches serial.

@@ -1,4 +1,4 @@
-#define iniline static inline
+#define inline static inline
 #include "params.h" // model & simulation parameters
 #undef inline
 #include <math.h>   // needed for tanh, used in init function
@@ -189,6 +189,8 @@ int main(int argc, char **argv) {
   free(du);
   free(dv);
   end = omp_get_wtime();
-  printf("%d,%.6f\n",omp_get_max_threads(), end - start);
+
+  //this is how i recorded the wall time for part 1
+  //printf("%d,%.6f\n",omp_get_max_threads(), end - start);
   return 0;
 }

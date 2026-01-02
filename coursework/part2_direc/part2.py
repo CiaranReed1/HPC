@@ -32,8 +32,6 @@ initial_grouped['step_time_se'] = initial_grouped['step_time_std'] / np.sqrt(ini
 initial_grouped['dxdt_time_se'] = initial_grouped['dxdt_time_std'] / np.sqrt(initial_grouped['count'])
 initial_grouped['norm_time_se'] = initial_grouped['norm_time_std'] / np.sqrt(initial_grouped['count'])
 initial_grouped['total_time_se'] = initial_grouped['total_time_std'] / np.sqrt(initial_grouped['count'])
-print(initial_grouped)
-
 # Columns for which we want speedup
 time_cols = ['init_time', 'step_time', 'dxdt_time', 'norm_time', 'total_time']
 
@@ -53,6 +51,12 @@ for col in time_cols:
     sigma1 = baseline[f'{col}_se']
     sigman = max_size_rows[f'{col}_se']
     speedup_df[f'{col}_speedup_se'] = S * np.sqrt((sigma1 / baseline[f'{col}_mean'])**2 + (sigman / max_size_rows[f'{col}_mean'])**2)
+    
+    #efficency
+    speedup_df[f'{col}_efficiency'] = speedup_df[f'{col}_speedup'] / max_size_rows['size']
+    
+    # Standard error for efficiency
+    speedup_df[f'{col}_efficiency_se'] = speedup_df[f'{col}_speedup_se'] / max_size_rows['size']
 
 # Add max_size column
 speedup_df['max_size'] = max_size_rows['size']
@@ -64,25 +68,28 @@ speedup_df = speedup_df.reset_index()
 se_cols = [f'{col}_speedup_se' for col in time_cols]
 speedup_df.loc[speedup_df['max_size'] == 1, se_cols] = 0.0
 
-print(speedup_df)
 for col in time_cols:
     xs = np.arange(1, speedup_df['max_size'].max() + 1)
     popt, pcov = optimize.curve_fit(speedup_model, speedup_df['max_size'], speedup_df[f'{col}_speedup'],p0=[0.9],bounds=(0,1))
     ys = speedup_model(xs, *popt)
     yerr = np.sqrt(np.diag(pcov))
     
-    fig,ax = plt.subplots(1,1,figsize=(8,6))
+    fig,ax = plt.subplots(1,1,figsize=(6,4))
     ax.errorbar(
         speedup_df['problem_size'],
         speedup_df[f'{col}_speedup'],
         yerr=speedup_df[f'{col}_speedup_se'],
         capsize=5,linestyle="",label="Measured Speedup",
         color = "blue",
-        marker = "o"
+        marker = "."
     )
     ax.plot(xs, ys, label=f"Fitted Model: f={popt[0]:.3f} ± {yerr[0]:.3f}", color="red")
     ax.set_xlabel("Problem Size, n")
     ax.set_ylabel("Speedup")
-    ax.set_title(f"Speedup for {col.replace('_', ' ').title()}")
+    #ax.set_title(f"Speedup for {col.replace('_', ' ').title()}")
     ax.legend()
     fig.savefig(f"plots/{col}_speedup.png",dpi=300)
+speedup_df.to_csv(f"processedData/mpi-3-speedup.csv",index=False)
+
+just_total = speedup_df[['problem_size','max_size','total_time_speedup','total_time_speedup_se','total_time_efficiency','total_time_efficiency_se']]
+just_total.to_csv(f"processedData/mpi-3-total-time-speedup.csv",index=False)
